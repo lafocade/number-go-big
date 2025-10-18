@@ -163,20 +163,20 @@
         }
         
         .equals-display {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: #666;
             cursor: pointer;
-            padding: 8px 12px;
+            width: 50px;
+            height: 50px;
             transition: all 0.3s ease;
-            min-width: 40px;
             text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
             background: rgba(102, 102, 102, 0.1);
-            border-radius: 8px;
-            border: 2px solid transparent;
+            border-radius: 50%;
+            border: 2px solid #666;
         }
         
         .equals-display.ready {
@@ -347,6 +347,74 @@
             color: #999 !important;
         }
         
+        .combine-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px auto;
+        }
+        
+        .combine-action {
+            width: 50px;
+            height: 50px;
+            background: rgba(102, 102, 102, 0.1);
+            border: 2px solid #666;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .combine-action.ready {
+            background: rgba(33, 150, 243, 0.1);
+            border-color: #2196F3;
+        }
+        
+        .combine-action:hover {
+            transform: scale(1.1);
+        }
+        
+        .combine-action.ready:hover {
+            background: rgba(33, 150, 243, 0.2);
+        }
+        
+        .combine-action:disabled {
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .combine-icon {
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .combine-action.ready .combine-icon {
+            color: #2196F3;
+        }
+        
+        .new-label {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff6b35;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            z-index: 10;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
         /* Round dots styling */
         .round-dots {
             display: flex;
@@ -509,16 +577,16 @@
     <div class="operation-display" id="operationDisplay">
         <div class="fixed-card" id="fixedCard">10</div>
         <div class="operator-display" id="operatorDisplay">+</div>
-        <div class="placeholder-card" id="placeholderCard">?</div>
+        <div class="placeholder-card" id="placeholderCard">...</div>
         <div class="equals-display" id="equalsDisplay">=</div>
     </div>
     
     <div class="dual-operation-display" id="dualOperationDisplay" style="display: none;">
         <div class="fixed-card" id="dualFixedCard">10</div>
         <div class="operator-display" id="dualOperatorDisplay1">+</div>
-        <div class="dual-placeholder-card" id="dualPlaceholderCard1">?</div>
+        <div class="dual-placeholder-card" id="dualPlaceholderCard1">...</div>
         <div class="operator-display" id="dualOperatorDisplay2">+</div>
-        <div class="dual-placeholder-card" id="dualPlaceholderCard2">?</div>
+        <div class="dual-placeholder-card" id="dualPlaceholderCard2">...</div>
         <div class="equals-display" id="dualEqualsDisplay">=</div>
     </div>
     
@@ -531,12 +599,13 @@
     </div>
     
     
-    <div class="combine-zone" id="combineZone">
-        <div class="combine-zone-text" id="combineZoneText">Combine two numbers</div>
-    </div>
-    
-    <div class="controls">
-        <button id="combineBtn" class="combine-btn">Combine</button>
+    <div class="combine-container">
+        <div class="combine-zone" id="combineZone">
+            <div class="combine-zone-text" id="combineZoneText">Combine two numbers</div>
+        </div>
+        <div class="combine-action" id="combineAction">
+            <div class="combine-icon">&</div>
+        </div>
     </div>
     
     <div id="gameOver" style="display: none; text-align: center; margin-top: 20px;">
@@ -548,7 +617,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.2.3
+        v0.2.4
     </div>
 
     <script>
@@ -573,7 +642,8 @@
             selectedNumbers: [],
             selectedForCombination: [],
             combinationUsed: false,
-            combineZoneCards: []
+            combineZoneCards: [],
+            newestCardId: null
         };
 
         function getNumberRarity(number) {
@@ -660,7 +730,7 @@
                 
                 // Hide combine functionality when game is over
                 document.getElementById('combineZone').style.display = 'none';
-                document.getElementById('combineBtn').style.display = 'none';
+                document.getElementById('combineAction').style.display = 'none';
                 
                 // Hide equals signs when game is over
                 document.getElementById('equalsDisplay').style.display = 'none';
@@ -693,7 +763,7 @@
             // Always show both buttons
             const equalsDisplay = document.getElementById('equalsDisplay');
             const dualEqualsDisplay = document.getElementById('dualEqualsDisplay');
-            const combineBtn = document.getElementById('combineBtn');
+            const combineAction = document.getElementById('combineAction');
 
             // Equals sign logic
             if (gameState.dualMode) {
@@ -705,13 +775,13 @@
                     dualEqualsDisplay.disabled = true;
                     dualEqualsDisplay.classList.remove('ready');
                 }
-                // Combine button logic in dual mode - enabled when exactly 2 numbers in combine zone
+                // Combine action logic in dual mode - enabled when exactly 2 numbers in combine zone
                 if (!gameState.combinationUsed && gameState.combineZoneCards.length === 2) {
-                    combineBtn.disabled = false;
-                    combineBtn.classList.add('enabled');
+                    combineAction.disabled = false;
+                    combineAction.classList.add('ready');
                 } else {
-                    combineBtn.disabled = true;
-                    combineBtn.classList.remove('enabled');
+                    combineAction.disabled = true;
+                    combineAction.classList.remove('ready');
                 }
             } else {
                 // Normal mode: enabled when exactly 1 number selected for play
@@ -723,13 +793,13 @@
                     equalsDisplay.classList.remove('ready');
                 }
 
-                // Combine button logic - enabled when exactly 2 numbers in combine zone
+                // Combine action logic - enabled when exactly 2 numbers in combine zone
                 if (!gameState.combinationUsed && gameState.combineZoneCards.length === 2) {
-                    combineBtn.disabled = false;
-                    combineBtn.classList.add('enabled');
+                    combineAction.disabled = false;
+                    combineAction.classList.add('ready');
                 } else {
-                    combineBtn.disabled = true;
-                    combineBtn.classList.remove('enabled');
+                    combineAction.disabled = true;
+                    combineAction.classList.remove('ready');
                 }
             }
         }
@@ -771,7 +841,7 @@
                     placeholderCard.style.background = '#4CAF50';
                     placeholderCard.style.borderColor = '#45a049';
                 } else {
-                    placeholderCard.textContent = '?';
+                    placeholderCard.textContent = '...';
                     placeholderCard.style.background = '#333';
                     placeholderCard.style.borderColor = '#666';
                 }
@@ -791,7 +861,7 @@
                     removeBtn.onclick = removeFromPlayZone;
                     placeholderCard.appendChild(removeBtn);
                 } else {
-                    placeholderCard.textContent = '?';
+                    placeholderCard.textContent = '...';
                     placeholderCard.style.background = '#333';
                     placeholderCard.style.borderColor = '#666';
                 }
@@ -874,7 +944,7 @@
                 removeBtn.onclick = () => removeFromDualPlayZone(index);
                 placeholderCard.appendChild(removeBtn);
             } else {
-                placeholderCard.textContent = '?';
+                placeholderCard.textContent = '...';
                 placeholderCard.style.background = '#333';
                 placeholderCard.style.borderColor = '#666';
                 placeholderCard.style.borderStyle = 'dashed';
@@ -1054,6 +1124,15 @@
                     card.classList.add('negative');
                 } else {
                     card.classList.add('positive');
+                }
+                
+                // Add "new" label to the newest card
+                if (gameState.newestCardId === cardObj.id) {
+                    const newLabel = document.createElement('div');
+                    newLabel.className = 'new-label';
+                    newLabel.textContent = 'new';
+                    card.style.position = 'relative';
+                    card.appendChild(newLabel);
                 }
                 
                 // Check if selected (only for dual mode and combination mode)
@@ -1278,7 +1357,9 @@
             }
             
             // Add new number
-            gameState.availableNumbers.push(generateRandomNumber());
+            const newCard = generateRandomNumber();
+            gameState.availableNumbers.push(newCard);
+            gameState.newestCardId = newCard.id;
             nextRound();
         }
 
@@ -1307,10 +1388,12 @@
                 const result = gameState.combineZoneCards[0].number + gameState.combineZoneCards[1].number;
                 
                 // Add combination result (cards already removed from hand when dragged)
-                gameState.availableNumbers.push({
-                    id: 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                    value: result
-                });
+            const newCombinedCard = {
+                id: 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                value: result
+            };
+            gameState.availableNumbers.push(newCombinedCard);
+            gameState.newestCardId = newCombinedCard.id;
                 gameState.combinationUsed = true;
                 gameState.combineZoneCards = [];
             }
@@ -1339,13 +1422,14 @@
                 selectedNumbers: [],
                 selectedForCombination: [],
                 combinationUsed: false,
-                combineZoneCards: []
+                combineZoneCards: [],
+                newestCardId: null
             };
             document.getElementById('gameOver').style.display = 'none';
             
             // Show combine functionality when restarting game
             document.getElementById('combineZone').style.display = 'flex';
-            document.getElementById('combineBtn').style.display = 'block';
+            document.getElementById('combineAction').style.display = 'flex';
             
             // Show equals signs when restarting game
             document.getElementById('equalsDisplay').style.display = 'flex';
@@ -1358,7 +1442,7 @@
         // Event listeners
         document.getElementById('equalsDisplay').onclick = playTurn;
         document.getElementById('dualEqualsDisplay').onclick = playTurn;
-        document.getElementById('combineBtn').onclick = () => {
+        document.getElementById('combineAction').onclick = () => {
             // Only execute if 2 numbers are in combine zone
             if (gameState.combineZoneCards.length === 2) {
                 executeCombination();
