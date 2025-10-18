@@ -206,6 +206,64 @@
             min-height: 20px;
         }
         
+        /* Dual mode styles for Round 5 */
+        .dual-operation-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .dual-placeholder-card {
+            width: 80px;
+            height: 60px;
+            background: rgba(33, 150, 243, 0.1);
+            border: 3px dashed #2196F3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #666;
+            font-size: 18px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .dual-placeholder-card.drag-over {
+            border-color: #1976D2;
+            background: rgba(33, 150, 243, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .dual-placeholder-card.highlight {
+            animation: pulse 1s infinite;
+        }
+        
+        .dual-placeholder-card .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #ff4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            min-width: 20px;
+            min-height: 20px;
+        }
+        
         /* Drag and drop styles */
         .combine-zone {
             width: 200px;
@@ -233,6 +291,16 @@
         
         .combine-zone.highlight {
             animation: pulse 1s infinite;
+        }
+        
+        .combine-zone.used {
+            background: #444 !important;
+            border-color: #666 !important;
+            cursor: not-allowed;
+        }
+        
+        .combine-zone.used .combine-zone-text {
+            color: #999 !important;
         }
         
         .combine-zone-text {
@@ -325,7 +393,7 @@
         }
         
         @media (max-width: 768px) {
-            .fixed-card, .placeholder-card {
+            .fixed-card, .placeholder-card, .dual-placeholder-card {
                 width: 60px;
                 height: 45px;
                 font-size: 18px;
@@ -352,6 +420,14 @@
         <div class="fixed-card" id="fixedCard">10</div>
         <div class="operator-display" id="operatorDisplay">+</div>
         <div class="placeholder-card" id="placeholderCard">?</div>
+    </div>
+    
+    <div class="dual-operation-display" id="dualOperationDisplay" style="display: none;">
+        <div class="fixed-card" id="dualFixedCard">10</div>
+        <div class="operator-display" id="dualOperatorDisplay1">+</div>
+        <div class="dual-placeholder-card" id="dualPlaceholderCard1">?</div>
+        <div class="operator-display" id="dualOperatorDisplay2">+</div>
+        <div class="dual-placeholder-card" id="dualPlaceholderCard2">?</div>
     </div>
     
     <div class="hand" id="hand">
@@ -387,7 +463,13 @@
         let gameState = {
             round: 1,
             maxRounds: 10,
-            availableNumbers: [1, 2, 3, 4, 5],
+            availableNumbers: [
+                {id: 'card-1', value: 1},
+                {id: 'card-2', value: 2},
+                {id: 'card-3', value: 3},
+                {id: 'card-4', value: 4},
+                {id: 'card-5', value: 5}
+            ],
             currentResult: 10,
             currentOperator: '+',
             selectedNumber: null,
@@ -432,7 +514,10 @@
                 number = -number;
             }
             
-            return number;
+            return {
+                id: 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                value: number
+            };
         }
 
         function calculateResult(left, operator, right) {
@@ -468,6 +553,21 @@
             // Update operation display
             updateOperationDisplay();
             
+            // Show/hide appropriate operation display
+            const operationDisplay = document.getElementById('operationDisplay');
+            const dualOperationDisplay = document.getElementById('dualOperationDisplay');
+            
+            if (gameState.dualMode) {
+                // Show dual operation display
+                operationDisplay.style.display = 'none';
+                dualOperationDisplay.style.display = 'flex';
+                updateDualOperationDisplay();
+            } else {
+                // Show normal operation display
+                operationDisplay.style.display = 'flex';
+                dualOperationDisplay.style.display = 'none';
+            }
+            
             // Update combine zone
             updateCombineZone();
 
@@ -478,7 +578,7 @@
             // Play button logic
             if (gameState.dualMode) {
                 // In dual mode: enabled when exactly 2 numbers selected
-                if (gameState.selectedNumbers.length === 2) {
+                if (gameState.selectedNumbers.length === 2 && gameState.selectedNumbers[0] !== null && gameState.selectedNumbers[1] !== null) {
                     playBtn.disabled = false;
                     playBtn.classList.remove('disabled');
                 } else {
@@ -545,8 +645,8 @@
                 }
             } else {
                 if (gameState.selectedNumber !== null) {
-                    // selectedNumber is now the actual number value, not an index
-                    placeholderCard.textContent = gameState.selectedNumber;
+                    // selectedNumber is now a card object
+                    placeholderCard.textContent = gameState.selectedNumber.value;
                     placeholderCard.style.background = '#333';
                     placeholderCard.style.borderColor = '#2196F3'; // Blue border like original cards
                     placeholderCard.style.color = '#ffffff'; // White text like original cards
@@ -572,12 +672,140 @@
             placeholderCard.addEventListener('drop', handlePlaceholderDrop);
         }
         
+        function updateDualOperationDisplay() {
+            const dualFixedCard = document.getElementById('dualFixedCard');
+            const dualOperatorDisplay1 = document.getElementById('dualOperatorDisplay1');
+            const dualOperatorDisplay2 = document.getElementById('dualOperatorDisplay2');
+            const dualPlaceholderCard1 = document.getElementById('dualPlaceholderCard1');
+            const dualPlaceholderCard2 = document.getElementById('dualPlaceholderCard2');
+            
+            // Update fixed card with current result
+            dualFixedCard.textContent = Math.ceil(gameState.currentResult);
+            
+            // Convert operator symbols
+            let operatorSymbol1 = gameState.currentOperator;
+            if (operatorSymbol1 === '*') operatorSymbol1 = '×';
+            if (operatorSymbol1 === '/') operatorSymbol1 = '÷';
+            if (operatorSymbol1 === '-') operatorSymbol1 = '−';
+            
+            let operatorSymbol2 = gameState.secondOperator;
+            if (operatorSymbol2 === '*') operatorSymbol2 = '×';
+            if (operatorSymbol2 === '/') operatorSymbol2 = '÷';
+            if (operatorSymbol2 === '-') operatorSymbol2 = '−';
+            
+            dualOperatorDisplay1.textContent = operatorSymbol1;
+            dualOperatorDisplay2.textContent = operatorSymbol2;
+            
+            // Update first placeholder
+            updateDualPlaceholder(dualPlaceholderCard1, 0);
+            // Update second placeholder
+            updateDualPlaceholder(dualPlaceholderCard2, 1);
+            
+            // Make placeholder cards droppable - ensure they're properly set up
+            setupDualPlaceholderDrop(dualPlaceholderCard1, 0);
+            setupDualPlaceholderDrop(dualPlaceholderCard2, 1);
+        }
+        
+        function updateDualPlaceholder(placeholderCard, index) {
+            // Clear existing remove button
+            const existingRemoveBtn = placeholderCard.querySelector('.remove-btn');
+            if (existingRemoveBtn) {
+                existingRemoveBtn.remove();
+            }
+            
+            if (gameState.selectedNumbers.length > index && gameState.selectedNumbers[index] !== null) {
+                // In dual mode, selectedNumbers contains card objects
+                const cardObj = gameState.selectedNumbers[index];
+                placeholderCard.textContent = cardObj.value;
+                placeholderCard.style.background = '#333';
+                placeholderCard.style.borderColor = '#2196F3';
+                placeholderCard.style.color = '#ffffff';
+                placeholderCard.style.borderStyle = 'solid';
+                
+                // Add remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = () => removeFromDualPlayZone(index);
+                placeholderCard.appendChild(removeBtn);
+            } else {
+                placeholderCard.textContent = '?';
+                placeholderCard.style.background = '#333';
+                placeholderCard.style.borderColor = '#666';
+                placeholderCard.style.borderStyle = 'dashed';
+            }
+        }
+        
+        function setupDualPlaceholderDrop(placeholderCard, index) {
+            placeholderCard.draggable = false;
+            
+            // Clear all existing listeners by cloning the element
+            const newPlaceholderCard = placeholderCard.cloneNode(true);
+            placeholderCard.parentNode.replaceChild(newPlaceholderCard, placeholderCard);
+            
+            // Add fresh event listeners to the new element
+            newPlaceholderCard.addEventListener('dragover', handleDragOver);
+            newPlaceholderCard.addEventListener('dragleave', handleDragLeave);
+            newPlaceholderCard.addEventListener('drop', (e) => handleDualPlaceholderDrop(e, index));
+            
+            // Add touch support
+            newPlaceholderCard.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                newPlaceholderCard.classList.add('highlight');
+            });
+            
+            newPlaceholderCard.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            });
+            
+            newPlaceholderCard.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                newPlaceholderCard.classList.remove('highlight');
+            });
+        }
+        
+        function handleDualPlaceholderDrop(e, index) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            const cardIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const cardObj = gameState.availableNumbers[cardIndex];
+            
+            if (!cardObj) return;
+            
+            // Remove from hand first
+            gameState.availableNumbers.splice(cardIndex, 1);
+            
+            // Add to dual selection - store the card object
+            if (gameState.selectedNumbers.length <= index) {
+                // Fill in missing slots
+                while (gameState.selectedNumbers.length <= index) {
+                    gameState.selectedNumbers.push(null);
+                }
+            }
+            gameState.selectedNumbers[index] = cardObj;
+            
+            updateDisplay();
+            renderHand();
+        }
+        
+        function removeFromDualPlayZone(index) {
+            if (gameState.selectedNumbers[index] !== null) {
+                // Return the card to the hand
+                gameState.availableNumbers.push(gameState.selectedNumbers[index]);
+                // Clear selection
+                gameState.selectedNumbers[index] = null;
+                updateDisplay();
+                renderHand();
+            }
+        }
+        
         function handlePlaceholderDrop(e) {
             e.preventDefault();
             e.target.classList.remove('drag-over');
             
             const index = parseInt(e.dataTransfer.getData('text/plain'));
-            const number = gameState.availableNumbers[index];
+            const cardObj = gameState.availableNumbers[index];
             
             // Remove from hand first
             gameState.availableNumbers.splice(index, 1);
@@ -598,7 +826,7 @@
             } else {
                 // For normal mode, we need to track the selected number differently
                 // since we removed it from availableNumbers
-                gameState.selectedNumber = number; // Store the actual number instead of index
+                gameState.selectedNumber = cardObj; // Store the card object instead of just the number
             }
             
             updateDisplay();
@@ -613,13 +841,23 @@
             const existingCards = combineZone.querySelectorAll('.combine-card');
             existingCards.forEach(card => card.remove());
             
+            // Check if combine has been used this round
+            if (gameState.combinationUsed) {
+                combineZoneText.style.display = 'block';
+                combineZoneText.textContent = 'Combine Used (resets next round)';
+                combineZone.classList.add('used');
+                combineZone.classList.remove('has-cards');
+                return;
+            }
+            
             if (gameState.combineZoneCards.length === 0) {
                 combineZoneText.style.display = 'block';
                 combineZoneText.textContent = 'Drag 2 cards here to combine';
-                combineZone.classList.remove('has-cards');
+                combineZone.classList.remove('has-cards', 'used');
             } else {
                 combineZoneText.style.display = 'none';
                 combineZone.classList.add('has-cards');
+                combineZone.classList.remove('used');
                 
                 // Add cards to combine zone
                 gameState.combineZoneCards.forEach((cardData, index) => {
@@ -654,19 +892,20 @@
             const hand = document.getElementById('hand');
             hand.innerHTML = '';
             
-            gameState.availableNumbers.forEach((number, index) => {
+            gameState.availableNumbers.forEach((cardObj, index) => {
                 const card = document.createElement('div');
                 card.className = 'number-card draggable';
-                card.textContent = number;
+                card.textContent = cardObj.value;
                 card.dataset.index = index;
+                card.dataset.cardId = cardObj.id;
                 card.draggable = true;
                 
                 // Add rarity class
-                const rarity = getNumberRarity(number);
+                const rarity = getNumberRarity(cardObj.value);
                 card.classList.add(rarity);
                 
                 // Add positive/negative class
-                if (number < 0) {
+                if (cardObj.value < 0) {
                     card.classList.add('negative');
                 } else {
                     card.classList.add('positive');
@@ -688,7 +927,7 @@
                 // Add drag and drop event listeners
                 card.addEventListener('dragstart', handleDragStart);
                 card.addEventListener('dragend', handleDragEnd);
-                card.addEventListener('click', () => selectNumber(index));
+                // Removed click functionality - only drag and drop allowed
                 
                 // Add touch event listeners for mobile
                 card.addEventListener('touchstart', handleTouchStart);
@@ -699,33 +938,7 @@
             });
         }
 
-        function selectNumber(index) {
-            if (gameState.dualMode) {
-                // Dual mode: select up to 2 numbers for dual operations
-                const selectedIndex = gameState.selectedNumbers.indexOf(index);
-                if (selectedIndex > -1) {
-                    // Deselect the number
-                    gameState.selectedNumbers.splice(selectedIndex, 1);
-                } else if (gameState.selectedNumbers.length < 2) {
-                    // Add to dual selection
-                    gameState.selectedNumbers.push(index);
-                }
-                // Clear other selections in dual mode
-                gameState.selectedNumber = null;
-                gameState.selectedForCombination = [];
-            } else {
-                // Normal mode: select for play
-                if (gameState.selectedNumber === index) {
-                    // Deselect
-                    gameState.selectedNumber = null;
-                } else {
-                    // Select for play
-                    gameState.selectedNumber = index;
-                }
-            }
-            updateDisplay();
-            renderHand();
-        }
+        // selectNumber function removed - only drag and drop allowed
         
         // Drag and drop handlers
         function handleDragStart(e) {
@@ -733,6 +946,8 @@
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/html', e.target.outerHTML);
             e.dataTransfer.setData('text/plain', e.target.dataset.index);
+            // Store the card ID for reliable identification
+            e.dataTransfer.setData('card/id', e.target.dataset.cardId);
         }
         
         function handleDragEnd(e) {
@@ -754,16 +969,17 @@
             e.target.classList.remove('drag-over');
             
             const index = parseInt(e.dataTransfer.getData('text/plain'));
-            const number = gameState.availableNumbers[index];
+            const cardObj = gameState.availableNumbers[index];
             
-            // Check if card is already in combine zone by comparing the actual number
-            const alreadyInZone = gameState.combineZoneCards.some(card => card.number === number);
+            // Check if card is already in combine zone by comparing the card ID
+            const alreadyInZone = gameState.combineZoneCards.some(card => card.cardId === cardObj.id);
             if (alreadyInZone) return;
             
             // Add to combine zone if not full
             if (gameState.combineZoneCards.length < 2) {
                 gameState.combineZoneCards.push({
-                    number: number,
+                    number: cardObj.value,
+                    cardId: cardObj.id,
                     originalIndex: index
                 });
                 
@@ -784,8 +1000,11 @@
         
         function removeFromCombineZone(index) {
             const cardToReturn = gameState.combineZoneCards[index];
-            // Return the card to the hand
-            gameState.availableNumbers.push(cardToReturn.number);
+            // Return the card to the hand as a card object
+            gameState.availableNumbers.push({
+                id: 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                value: cardToReturn.number
+            });
             // Remove from combine zone
             gameState.combineZoneCards.splice(index, 1);
             updateDisplay();
@@ -853,16 +1072,17 @@
         }
         
         function handleCombineZoneTouch(index) {
-            const number = gameState.availableNumbers[index];
+            const cardObj = gameState.availableNumbers[index];
             
-            // Check if card is already in combine zone by comparing the actual number
-            const alreadyInZone = gameState.combineZoneCards.some(card => card.number === number);
+            // Check if card is already in combine zone by comparing the card ID
+            const alreadyInZone = gameState.combineZoneCards.some(card => card.cardId === cardObj.id);
             if (alreadyInZone) return;
             
             // Add to combine zone if not full
             if (gameState.combineZoneCards.length < 2) {
                 gameState.combineZoneCards.push({
-                    number: number,
+                    number: cardObj.value,
+                    cardId: cardObj.id,
                     originalIndex: index
                 });
                 
@@ -882,14 +1102,14 @@
         }
         
         function handlePlayZoneTouch(index) {
-            const number = gameState.availableNumbers[index];
+            const cardObj = gameState.availableNumbers[index];
             
             if (gameState.selectedNumber === null) {
                 // Remove from hand first
                 gameState.availableNumbers.splice(index, 1);
                 
                 // Select the number for play
-                gameState.selectedNumber = number;
+                gameState.selectedNumber = cardObj;
                 
                 updateDisplay();
                 renderHand();
@@ -898,17 +1118,14 @@
 
         function playTurn() {
             if (gameState.dualMode) {
-                const firstResult = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.availableNumbers[gameState.selectedNumbers[0]]);
-                const finalResult = calculateResult(firstResult, gameState.secondOperator, gameState.availableNumbers[gameState.selectedNumbers[1]]);
+                const firstResult = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.selectedNumbers[0].value);
+                const finalResult = calculateResult(firstResult, gameState.secondOperator, gameState.selectedNumbers[1].value);
                 gameState.currentResult = finalResult;
                 
-                // Remove selected numbers by index (in reverse order to maintain indices)
-                gameState.selectedNumbers.sort((a, b) => b - a).forEach(index => {
-                    gameState.availableNumbers.splice(index, 1);
-                });
+                // selectedNumbers are already removed from availableNumbers when dragged
                 gameState.selectedNumbers = [];
             } else {
-                const result = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.selectedNumber);
+                const result = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.selectedNumber.value);
                 gameState.currentResult = result;
                 
                 // selectedNumber is already removed from availableNumbers when dragged
@@ -945,7 +1162,10 @@
                 const result = gameState.combineZoneCards[0].number + gameState.combineZoneCards[1].number;
                 
                 // Add combination result (cards already removed from hand when dragged)
-                gameState.availableNumbers.push(result);
+                gameState.availableNumbers.push({
+                    id: 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                    value: result
+                });
                 gameState.combinationUsed = true;
                 gameState.combineZoneCards = [];
             }
@@ -957,7 +1177,13 @@
             gameState = {
                 round: 1,
                 maxRounds: 10,
-                availableNumbers: [1, 2, 3, 4, 5],
+                availableNumbers: [
+                    {id: 'card-1', value: 1},
+                    {id: 'card-2', value: 2},
+                    {id: 'card-3', value: 3},
+                    {id: 'card-4', value: 4},
+                    {id: 'card-5', value: 5}
+                ],
                 currentResult: 10,
                 currentOperator: generateRandomOperator(),
                 selectedNumber: null,
