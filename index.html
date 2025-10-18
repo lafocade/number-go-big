@@ -325,7 +325,7 @@
         }
         
         .round-dot.completed {
-            background: #ffffff;
+            background: #aaaaaa;
         }
         
         .round-dot.current {
@@ -342,6 +342,13 @@
                 transform: scale(1.3);
                 opacity: 0.8;
             }
+        }
+        
+        .score-info {
+            text-align: center;
+            margin: 15px 0;
+            color: #ccc;
+            font-size: 14px;
         }
         
         .combine-zone-text {
@@ -454,7 +461,6 @@
 <body>
     <h1>NUMBER GO BIG</h1>
     <div class="info">
-        <div>Score 300 to win</div>
         <div class="round-dots" id="roundDots">
             <!-- Round dots will be generated here -->
         </div>
@@ -472,6 +478,10 @@
         <div class="dual-placeholder-card" id="dualPlaceholderCard1">?</div>
         <div class="operator-display" id="dualOperatorDisplay2">+</div>
         <div class="dual-placeholder-card" id="dualPlaceholderCard2">?</div>
+    </div>
+    
+    <div class="score-info">
+        <div>Score 300 to win</div>
     </div>
     
     <div class="hand" id="hand">
@@ -499,7 +509,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.2.1
+        v0.2.2
     </div>
 
     <script>
