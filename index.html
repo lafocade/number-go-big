@@ -158,6 +158,10 @@
             text-align: center;
         }
         
+        .operator-display.negative {
+            color: #ff4444 !important;
+        }
+        
         .placeholder-card {
             width: 80px;
             height: 60px;
@@ -455,7 +459,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.1.2
+        v0.2
     </div>
 
     <script>
@@ -625,6 +629,13 @@
             
             operatorDisplay.textContent = operatorSymbol;
             
+            // Apply red color for negative operators
+            if (gameState.currentOperator === '-' || gameState.currentOperator === '/') {
+                operatorDisplay.classList.add('negative');
+            } else {
+                operatorDisplay.classList.remove('negative');
+            }
+            
             // Clear existing remove button
             const existingRemoveBtn = placeholderCard.querySelector('.remove-btn');
             if (existingRemoveBtn) {
@@ -695,6 +706,19 @@
             
             dualOperatorDisplay1.textContent = operatorSymbol1;
             dualOperatorDisplay2.textContent = operatorSymbol2;
+            
+            // Apply red color for negative operators
+            if (gameState.currentOperator === '-' || gameState.currentOperator === '/') {
+                dualOperatorDisplay1.classList.add('negative');
+            } else {
+                dualOperatorDisplay1.classList.remove('negative');
+            }
+            
+            if (gameState.secondOperator === '-' || gameState.secondOperator === '/') {
+                dualOperatorDisplay2.classList.add('negative');
+            } else {
+                dualOperatorDisplay2.classList.remove('negative');
+            }
             
             // Update first placeholder
             updateDualPlaceholder(dualPlaceholderCard1, 0);
