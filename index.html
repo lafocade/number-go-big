@@ -161,8 +161,8 @@
         .placeholder-card {
             width: 80px;
             height: 60px;
-            background: #333;
-            border: 3px dashed #666;
+            background: rgba(33, 150, 243, 0.1);
+            border: 3px dashed #2196F3;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -170,6 +170,17 @@
             color: #666;
             font-size: 18px;
             position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .placeholder-card.drag-over {
+            border-color: #1976D2;
+            background: rgba(33, 150, 243, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .placeholder-card.highlight {
+            animation: pulse 1s infinite;
         }
         
         .placeholder-card .remove-btn {
@@ -199,24 +210,29 @@
         .combine-zone {
             width: 200px;
             height: 80px;
-            border: 3px dashed #666;
+            border: 3px dashed #4CAF50;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 20px auto;
-            background: #2a2a2a;
+            background: rgba(76, 175, 80, 0.1);
             transition: all 0.3s ease;
         }
         
         .combine-zone.drag-over {
-            border-color: #4CAF50;
-            background: #1a3a1a;
+            border-color: #45a049;
+            background: rgba(76, 175, 80, 0.2);
+            transform: scale(1.05);
         }
         
         .combine-zone.has-cards {
             border-color: #2196F3;
-            background: #1a2a3a;
+            background: rgba(33, 150, 243, 0.1);
+        }
+        
+        .combine-zone.highlight {
+            animation: pulse 1s infinite;
         }
         
         .combine-zone-text {
@@ -240,6 +256,19 @@
         
         .number-card.draggable:active {
             cursor: grabbing;
+        }
+        
+        .number-card.touching {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        /* Pulse animation for drop zones */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         
         .combine-card {
@@ -646,6 +675,10 @@
                 card.addEventListener('dragend', handleDragEnd);
                 card.addEventListener('click', () => selectNumber(index));
                 
+                // Add touch event listeners for mobile
+                card.addEventListener('touchstart', handleTouchStart);
+                card.addEventListener('touchend', handleTouchEnd);
+                
                 hand.appendChild(card);
             });
         }
@@ -753,6 +786,75 @@
                 renderHand();
             }
         }
+        
+        // Touch event handlers for mobile
+        function handleTouchStart(e) {
+            e.preventDefault();
+            e.target.classList.add('touching');
+        }
+        
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            e.target.classList.remove('touching');
+            
+            // Check if touching a drop zone
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (elementBelow && elementBelow.closest('.combine-zone')) {
+                // Add to combine zone
+                const index = parseInt(e.target.dataset.index);
+                handleCombineZoneTouch(index);
+            } else if (elementBelow && elementBelow.closest('.placeholder-card')) {
+                // Add to play zone
+                const index = parseInt(e.target.dataset.index);
+                handlePlayZoneTouch(index);
+            }
+        }
+        
+        function handleCombineZoneTouch(index) {
+            const number = gameState.availableNumbers[index];
+            
+            // Check if card is already in combine zone by comparing the actual number
+            const alreadyInZone = gameState.combineZoneCards.some(card => card.number === number);
+            if (alreadyInZone) return;
+            
+            // Add to combine zone if not full
+            if (gameState.combineZoneCards.length < 2) {
+                gameState.combineZoneCards.push({
+                    number: number,
+                    originalIndex: index
+                });
+                
+                // Remove from hand
+                gameState.availableNumbers.splice(index, 1);
+                
+                // Adjust indices for remaining cards in combine zone
+                gameState.combineZoneCards.forEach(card => {
+                    if (card.originalIndex > index) {
+                        card.originalIndex--;
+                    }
+                });
+                
+                updateDisplay();
+                renderHand();
+            }
+        }
+        
+        function handlePlayZoneTouch(index) {
+            const number = gameState.availableNumbers[index];
+            
+            if (gameState.selectedNumber === null) {
+                // Remove from hand first
+                gameState.availableNumbers.splice(index, 1);
+                
+                // Select the number for play
+                gameState.selectedNumber = number;
+                
+                updateDisplay();
+                renderHand();
+            }
+        }
 
         function playTurn() {
             if (gameState.dualMode) {
@@ -847,6 +949,29 @@
         combineZone.addEventListener('dragover', handleDragOver);
         combineZone.addEventListener('dragleave', handleDragLeave);
         combineZone.addEventListener('drop', handleDrop);
+        
+        // Add touch event listeners to drop zones
+        combineZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            combineZone.classList.add('highlight');
+        });
+        
+        combineZone.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            combineZone.classList.remove('highlight');
+        });
+        
+        // Add touch support for placeholder card
+        const placeholderCard = document.getElementById('placeholderCard');
+        placeholderCard.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            placeholderCard.classList.add('highlight');
+        });
+        
+        placeholderCard.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            placeholderCard.classList.remove('highlight');
+        });
 
         // Initialize game
         gameState.currentOperator = generateRandomOperator();
