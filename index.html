@@ -124,18 +124,190 @@
             text-align: center;
             margin: 10px 0;
         }
+        
+        /* Operation display styles */
+        .operation-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .fixed-card {
+            width: 80px;
+            height: 60px;
+            background: #555;
+            border: 3px solid #777;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+            cursor: default;
+        }
+        
+        .operator-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4CAF50;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .placeholder-card {
+            width: 80px;
+            height: 60px;
+            background: #333;
+            border: 3px dashed #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            color: #666;
+            font-size: 18px;
+            position: relative;
+        }
+        
+        .placeholder-card .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #ff4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            min-width: 20px;
+            min-height: 20px;
+        }
+        
+        /* Drag and drop styles */
+        .combine-zone {
+            width: 200px;
+            height: 80px;
+            border: 3px dashed #666;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            background: #2a2a2a;
+            transition: all 0.3s ease;
+        }
+        
+        .combine-zone.drag-over {
+            border-color: #4CAF50;
+            background: #1a3a1a;
+        }
+        
+        .combine-zone.has-cards {
+            border-color: #2196F3;
+            background: #1a2a3a;
+        }
+        
+        .combine-zone-text {
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .combine-zone-text.has-cards {
+            color: #2196F3;
+        }
+        
+        .number-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        
+        .number-card.draggable {
+            cursor: grab;
+        }
+        
+        .number-card.draggable:active {
+            cursor: grabbing;
+        }
+        
+        .combine-card {
+            width: 60px;
+            height: 45px;
+            background: #333;
+            border: 2px solid #2196F3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 0 5px;
+            position: relative;
+        }
+        
+        .combine-card .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background: #ff4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            min-width: 20px;
+            min-height: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .fixed-card, .placeholder-card {
+                width: 60px;
+                height: 45px;
+                font-size: 18px;
+            }
+            
+            .operator-display {
+                font-size: 24px;
+            }
+            
+            .combine-zone {
+                width: 160px;
+                height: 60px;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>NUMBER GO BIG</h1>
     <div class="info">
-        <div>Round: <span id="round">1</span> / 10</div>
-        <div>Score to win: 300</div>
+        <div>Score 300 to win. Round <span id="round">1</span> / 10</div>
     </div>
     
-    <div class="info">
-        <div id="operation">Next operation: 10 + ?</div>
-        <div id="selected">Choose a number from your hand:</div>
+    <div class="operation-display" id="operationDisplay">
+        <div class="fixed-card" id="fixedCard">10</div>
+        <div class="operator-display" id="operatorDisplay">+</div>
+        <div class="placeholder-card" id="placeholderCard">?</div>
     </div>
     
     <div class="hand" id="hand">
@@ -143,8 +315,15 @@
     </div>
     
     <div class="controls">
-        <button id="combineBtn" class="combine-btn">Combine</button>
         <button id="playBtn">Play</button>
+    </div>
+    
+    <div class="combine-zone" id="combineZone">
+        <div class="combine-zone-text" id="combineZoneText">Drag 2 cards here to combine</div>
+    </div>
+    
+    <div class="controls">
+        <button id="combineBtn" class="combine-btn">Combine</button>
     </div>
     
     <div id="gameOver" style="display: none; text-align: center; margin-top: 50px;">
@@ -174,7 +353,8 @@
             secondOperator: '',
             selectedNumbers: [],
             selectedForCombination: [],
-            combinationUsed: false
+            combinationUsed: false,
+            combineZoneCards: []
         };
 
         function getNumberRarity(number) {
@@ -241,6 +421,12 @@
                 return;
             }
 
+            // Update operation display
+            updateOperationDisplay();
+            
+            // Update combine zone
+            updateCombineZone();
+
             // Always show both buttons
             const playBtn = document.getElementById('playBtn');
             const combineBtn = document.getElementById('combineBtn');
@@ -268,8 +454,8 @@
                     playBtn.classList.add('disabled');
                 }
 
-                // Combine button logic - enabled when exactly 2 numbers selected for combination
-                if (!gameState.combinationUsed && gameState.selectedForCombination.length === 2) {
+                // Combine button logic - enabled when exactly 2 numbers in combine zone
+                if (!gameState.combinationUsed && gameState.combineZoneCards.length === 2) {
                     combineBtn.disabled = false;
                     combineBtn.classList.add('enabled');
                 } else {
@@ -277,42 +463,146 @@
                     combineBtn.classList.remove('enabled');
                 }
             }
-
-            // Update operation text
+        }
+        
+        function updateOperationDisplay() {
+            const fixedCard = document.getElementById('fixedCard');
+            const operatorDisplay = document.getElementById('operatorDisplay');
+            const placeholderCard = document.getElementById('placeholderCard');
+            
+            // Update fixed card with current result
+            fixedCard.textContent = Math.ceil(gameState.currentResult);
+            
+            // Convert operator symbols
+            let operatorSymbol = gameState.currentOperator;
+            if (operatorSymbol === '*') operatorSymbol = '×';
+            if (operatorSymbol === '/') operatorSymbol = '÷';
+            if (operatorSymbol === '-') operatorSymbol = '−';
+            
+            operatorDisplay.textContent = operatorSymbol;
+            
+            // Clear existing remove button
+            const existingRemoveBtn = placeholderCard.querySelector('.remove-btn');
+            if (existingRemoveBtn) {
+                existingRemoveBtn.remove();
+            }
+            
+            // Update placeholder based on selection
             if (gameState.dualMode) {
-                let operationText = `Dual Operations (Round 5): ${gameState.currentResult} ${gameState.currentOperator} ? ${gameState.secondOperator} ?`;
-                
-                // Replace question marks with selected numbers
                 if (gameState.selectedNumbers.length >= 1) {
                     const firstNumber = gameState.availableNumbers[gameState.selectedNumbers[0]];
-                    operationText = operationText.replace('?', firstNumber);
-                }
-                if (gameState.selectedNumbers.length >= 2) {
-                    const secondNumber = gameState.availableNumbers[gameState.selectedNumbers[1]];
-                    operationText = operationText.replace('?', secondNumber);
-                }
-                
-                document.getElementById('operation').textContent = operationText;
-            } else {
-                document.getElementById('operation').textContent = `Next operation: ${gameState.currentResult} ${gameState.currentOperator} ?`;
-            }
-
-            // Update selected text
-            if (gameState.dualMode) {
-                if (gameState.selectedNumbers.length > 0) {
-                    const selectedValues = gameState.selectedNumbers.map(i => gameState.availableNumbers[i]);
-                    document.getElementById('selected').textContent = `Selected for dual operations: ${selectedValues.join(', ')} (${gameState.selectedNumbers.length}/2)`;
+                    placeholderCard.textContent = firstNumber;
+                    placeholderCard.style.background = '#4CAF50';
+                    placeholderCard.style.borderColor = '#45a049';
                 } else {
-                    document.getElementById('selected').textContent = 'Choose two numbers for dual operations:';
+                    placeholderCard.textContent = '?';
+                    placeholderCard.style.background = '#333';
+                    placeholderCard.style.borderColor = '#666';
                 }
-            } else if (gameState.selectedForCombination.length > 0) {
-                document.getElementById('selected').textContent = `Selected for combination: ${gameState.selectedForCombination.length}/2 cards`;
-            } else if (gameState.selectedNumber !== null) {
-                document.getElementById('selected').textContent = `Selected: ${gameState.availableNumbers[gameState.selectedNumber]}`;
             } else {
-                document.getElementById('selected').textContent = gameState.combinationUsed ? 
-                    'Choose a number from your hand (Combination used this round):' : 
-                    'Choose a number from your hand:';
+                if (gameState.selectedNumber !== null) {
+                    // selectedNumber is now the actual number value, not an index
+                    placeholderCard.textContent = gameState.selectedNumber;
+                    placeholderCard.style.background = '#333';
+                    placeholderCard.style.borderColor = '#2196F3'; // Blue border like original cards
+                    placeholderCard.style.color = '#ffffff'; // White text like original cards
+                    placeholderCard.style.borderStyle = 'solid'; // Solid border instead of dashed
+                    
+                    // Add remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.textContent = '×';
+                    removeBtn.onclick = removeFromPlayZone;
+                    placeholderCard.appendChild(removeBtn);
+                } else {
+                    placeholderCard.textContent = '?';
+                    placeholderCard.style.background = '#333';
+                    placeholderCard.style.borderColor = '#666';
+                }
+            }
+            
+            // Make placeholder card droppable
+            placeholderCard.draggable = false;
+            placeholderCard.addEventListener('dragover', handleDragOver);
+            placeholderCard.addEventListener('dragleave', handleDragLeave);
+            placeholderCard.addEventListener('drop', handlePlaceholderDrop);
+        }
+        
+        function handlePlaceholderDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            const index = parseInt(e.dataTransfer.getData('text/plain'));
+            const number = gameState.availableNumbers[index];
+            
+            // Remove from hand first
+            gameState.availableNumbers.splice(index, 1);
+            
+            // Select the number for play
+            if (gameState.dualMode) {
+                // Adjust indices for remaining cards in dual mode
+                gameState.selectedNumbers = gameState.selectedNumbers.map(selectedIndex => {
+                    if (selectedIndex > index) {
+                        return selectedIndex - 1;
+                    }
+                    return selectedIndex;
+                });
+                
+                if (!gameState.selectedNumbers.includes(index) && gameState.selectedNumbers.length < 2) {
+                    gameState.selectedNumbers.push(index);
+                }
+            } else {
+                // For normal mode, we need to track the selected number differently
+                // since we removed it from availableNumbers
+                gameState.selectedNumber = number; // Store the actual number instead of index
+            }
+            
+            updateDisplay();
+            renderHand();
+        }
+        
+        function updateCombineZone() {
+            const combineZone = document.getElementById('combineZone');
+            const combineZoneText = document.getElementById('combineZoneText');
+            
+            // Clear existing cards
+            const existingCards = combineZone.querySelectorAll('.combine-card');
+            existingCards.forEach(card => card.remove());
+            
+            if (gameState.combineZoneCards.length === 0) {
+                combineZoneText.style.display = 'block';
+                combineZoneText.textContent = 'Drag 2 cards here to combine';
+                combineZone.classList.remove('has-cards');
+            } else {
+                combineZoneText.style.display = 'none';
+                combineZone.classList.add('has-cards');
+                
+                // Add cards to combine zone
+                gameState.combineZoneCards.forEach((cardData, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'combine-card';
+                    card.textContent = cardData.number;
+                    card.dataset.index = index;
+                    
+                    // Add rarity styling
+                    const rarity = getNumberRarity(cardData.number);
+                    card.classList.add(rarity);
+                    
+                    if (cardData.number < 0) {
+                        card.classList.add('negative');
+                    } else {
+                        card.classList.add('positive');
+                    }
+                    
+                    // Add remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-btn';
+                    removeBtn.textContent = '×';
+                    removeBtn.onclick = () => removeFromCombineZone(index);
+                    card.appendChild(removeBtn);
+                    
+                    combineZone.appendChild(card);
+                });
             }
         }
 
@@ -322,9 +612,10 @@
             
             gameState.availableNumbers.forEach((number, index) => {
                 const card = document.createElement('div');
-                card.className = 'number-card';
+                card.className = 'number-card draggable';
                 card.textContent = number;
-                card.dataset.index = index; // Add unique index to each card
+                card.dataset.index = index;
+                card.draggable = true;
                 
                 // Add rarity class
                 const rarity = getNumberRarity(number);
@@ -337,21 +628,24 @@
                     card.classList.add('positive');
                 }
                 
-                // Check if selected
+                // Check if selected (only for dual mode and combination mode)
                 let isSelected = false;
                 if (gameState.dualMode) {
                     isSelected = gameState.selectedNumbers.includes(index);
                 } else if (gameState.selectedForCombination.includes(index)) {
                     isSelected = true;
-                } else if (gameState.selectedNumber === index && gameState.selectedForCombination.length === 0) {
-                    isSelected = true;
                 }
+                // Note: Removed green highlighting for normal play selection
 
                 if (isSelected) {
                     card.classList.add('selected');
                 }
                 
-                card.onclick = () => selectNumber(index);
+                // Add drag and drop event listeners
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('click', () => selectNumber(index));
+                
                 hand.appendChild(card);
             });
         }
@@ -371,36 +665,93 @@
                 gameState.selectedNumber = null;
                 gameState.selectedForCombination = [];
             } else {
-                // Normal mode: check if this number is already selected
-                const isInPlaySelection = gameState.selectedNumber === index;
-                const isInCombinationSelection = gameState.selectedForCombination.includes(index);
-                
-                if (isInPlaySelection) {
-                    // Deselect from play
+                // Normal mode: select for play
+                if (gameState.selectedNumber === index) {
+                    // Deselect
                     gameState.selectedNumber = null;
-                } else if (isInCombinationSelection) {
-                    // Deselect from combination
-                    const selectedIndex = gameState.selectedForCombination.indexOf(index);
-                    gameState.selectedForCombination.splice(selectedIndex, 1);
                 } else {
-                    // Add to selection
-                    if (gameState.selectedForCombination.length > 0) {
-                        // Already in combination mode, add to combination
-                        if (gameState.selectedForCombination.length < 2) {
-                            gameState.selectedForCombination.push(index);
-                        }
-                    } else if (gameState.selectedNumber !== null) {
-                        // Already have one selected, start combination mode
-                        gameState.selectedForCombination = [gameState.selectedNumber, index];
-                        gameState.selectedNumber = null;
-                    } else {
-                        // Start with single selection
-                        gameState.selectedNumber = index;
-                    }
+                    // Select for play
+                    gameState.selectedNumber = index;
                 }
             }
             updateDisplay();
             renderHand();
+        }
+        
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.outerHTML);
+            e.dataTransfer.setData('text/plain', e.target.dataset.index);
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.target.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+            
+            const index = parseInt(e.dataTransfer.getData('text/plain'));
+            const number = gameState.availableNumbers[index];
+            
+            // Check if card is already in combine zone by comparing the actual number
+            const alreadyInZone = gameState.combineZoneCards.some(card => card.number === number);
+            if (alreadyInZone) return;
+            
+            // Add to combine zone if not full
+            if (gameState.combineZoneCards.length < 2) {
+                gameState.combineZoneCards.push({
+                    number: number,
+                    originalIndex: index
+                });
+                
+                // Remove from hand
+                gameState.availableNumbers.splice(index, 1);
+                
+                // Adjust indices for remaining cards in combine zone
+                gameState.combineZoneCards.forEach(card => {
+                    if (card.originalIndex > index) {
+                        card.originalIndex--;
+                    }
+                });
+                
+                updateDisplay();
+                renderHand();
+            }
+        }
+        
+        function removeFromCombineZone(index) {
+            const cardToReturn = gameState.combineZoneCards[index];
+            // Return the card to the hand
+            gameState.availableNumbers.push(cardToReturn.number);
+            // Remove from combine zone
+            gameState.combineZoneCards.splice(index, 1);
+            updateDisplay();
+            renderHand();
+        }
+        
+        function removeFromPlayZone() {
+            if (gameState.selectedNumber !== null) {
+                // Return the card to the hand
+                gameState.availableNumbers.push(gameState.selectedNumber);
+                // Clear selection
+                gameState.selectedNumber = null;
+                updateDisplay();
+                renderHand();
+            }
         }
 
         function playTurn() {
@@ -415,11 +766,10 @@
                 });
                 gameState.selectedNumbers = [];
             } else {
-                const result = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.availableNumbers[gameState.selectedNumber]);
+                const result = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.selectedNumber);
                 gameState.currentResult = result;
                 
-                // Remove selected number by index
-                gameState.availableNumbers.splice(gameState.selectedNumber, 1);
+                // selectedNumber is already removed from availableNumbers when dragged
                 gameState.selectedNumber = null;
             }
             
@@ -449,19 +799,13 @@
         }
 
         function executeCombination() {
-            if (gameState.selectedForCombination.length === 2) {
-                const result = gameState.availableNumbers[gameState.selectedForCombination[0]] + gameState.availableNumbers[gameState.selectedForCombination[1]];
+            if (gameState.combineZoneCards.length === 2) {
+                const result = gameState.combineZoneCards[0].number + gameState.combineZoneCards[1].number;
                 
-                // Remove selected numbers by index (in reverse order to maintain indices)
-                gameState.selectedForCombination.sort((a, b) => b - a).forEach(index => {
-                    gameState.availableNumbers.splice(index, 1);
-                });
-                
-                // Add combination result
+                // Add combination result (cards already removed from hand when dragged)
                 gameState.availableNumbers.push(result);
                 gameState.combinationUsed = true;
-                gameState.combinationMode = false;
-                gameState.selectedForCombination = [];
+                gameState.combineZoneCards = [];
             }
             updateDisplay();
             renderHand();
@@ -481,7 +825,8 @@
                 secondOperator: '',
                 selectedNumbers: [],
                 selectedForCombination: [],
-                combinationUsed: false
+                combinationUsed: false,
+                combineZoneCards: []
             };
             document.getElementById('gameOver').style.display = 'none';
             updateDisplay();
@@ -491,11 +836,17 @@
         // Event listeners
         document.getElementById('playBtn').onclick = playTurn;
         document.getElementById('combineBtn').onclick = () => {
-            // Only execute if 2 numbers are selected
-            if (gameState.selectedForCombination.length === 2) {
+            // Only execute if 2 numbers are in combine zone
+            if (gameState.combineZoneCards.length === 2) {
                 executeCombination();
             }
         };
+        
+        // Set up combine zone drag and drop
+        const combineZone = document.getElementById('combineZone');
+        combineZone.addEventListener('dragover', handleDragOver);
+        combineZone.addEventListener('dragleave', handleDragLeave);
+        combineZone.addEventListener('drop', handleDrop);
 
         // Initialize game
         gameState.currentOperator = generateRandomOperator();
