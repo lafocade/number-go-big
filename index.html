@@ -28,13 +28,24 @@
             gap: 10px;
         }
         button {
-            padding: 10px 20px;
-            margin: 5px;
+            padding: 12px 24px;
+            margin: 6px;
             background: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            min-width: 100px;
+        }
+        
+        @media (max-width: 768px) {
+            button {
+                padding: 15px 30px;
+                font-size: 16px;
+                min-width: 120px;
+            }
         }
         button:hover {
             background: #45a049;
@@ -67,7 +78,7 @@
             justify-content: center;
         }
         .number-card {
-            width: 60px;
+            width: 55px;
             height: 40px;
             background: #333;
             border: 3px solid;
@@ -77,6 +88,15 @@
             cursor: pointer;
             border-radius: 5px;
             font-weight: bold;
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .number-card {
+                width: 45px;
+                height: 35px;
+                font-size: 14px;
+            }
         }
         .number-card.selected {
             background: #4CAF50;
@@ -110,7 +130,7 @@
     <h1>NUMBER GO BIG</h1>
     <div class="info">
         <div>Round: <span id="round">1</span> / 10</div>
-        <div>Target: 300</div>
+        <div>Score to win: 300</div>
     </div>
     
     <div class="info">
@@ -127,7 +147,7 @@
         <button id="playBtn">Play</button>
     </div>
     
-    <div id="gameOver" style="display: none;">
+    <div id="gameOver" style="display: none; text-align: center; margin-top: 50px;">
         <h2>Game Over!</h2>
         <div>Final Score: <span id="finalScore">0</span></div>
         <div id="result"></div>
@@ -205,7 +225,9 @@
         }
 
         function updateDisplay() {
-            document.getElementById('round').textContent = gameState.round;
+            // Cap the round display at 10
+            const displayRound = Math.min(gameState.round, gameState.maxRounds);
+            document.getElementById('round').textContent = displayRound;
             
             if (gameState.gamePhase === 'game_over') {
                 document.getElementById('gameOver').style.display = 'block';
