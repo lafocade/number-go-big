@@ -271,6 +271,21 @@
             100% { transform: scale(1); }
         }
         
+        /* Ghost card for touch following */
+        .ghost-card {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            opacity: 0.8;
+            transition: none;
+        }
+        
+        .ghost-card.dragging {
+            opacity: 0.6;
+            transform: translate(-50%, -50%) rotate(5deg);
+        }
+        
         .combine-card {
             width: 60px;
             height: 45px;
@@ -364,7 +379,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.1.1
+        v0.1.2
     </div>
 
     <script>
@@ -677,6 +692,7 @@
                 
                 // Add touch event listeners for mobile
                 card.addEventListener('touchstart', handleTouchStart);
+                card.addEventListener('touchmove', handleTouchMove);
                 card.addEventListener('touchend', handleTouchEnd);
                 
                 hand.appendChild(card);
@@ -791,11 +807,35 @@
         function handleTouchStart(e) {
             e.preventDefault();
             e.target.classList.add('touching');
+            
+            // Create ghost card
+            const ghostCard = e.target.cloneNode(true);
+            ghostCard.classList.add('ghost-card');
+            ghostCard.classList.add('dragging');
+            document.body.appendChild(ghostCard);
+            
+            // Store reference for cleanup
+            e.target.ghostCard = ghostCard;
+        }
+        
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (e.target.ghostCard) {
+                const touch = e.touches[0];
+                e.target.ghostCard.style.left = touch.clientX + 'px';
+                e.target.ghostCard.style.top = touch.clientY + 'px';
+            }
         }
         
         function handleTouchEnd(e) {
             e.preventDefault();
             e.target.classList.remove('touching');
+            
+            // Remove ghost card
+            if (e.target.ghostCard) {
+                document.body.removeChild(e.target.ghostCard);
+                e.target.ghostCard = null;
+            }
             
             // Check if touching a drop zone
             const touch = e.changedTouches[0];
@@ -956,6 +996,11 @@
             combineZone.classList.add('highlight');
         });
         
+        combineZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            // Keep the highlight during movement
+        });
+        
         combineZone.addEventListener('touchend', (e) => {
             e.preventDefault();
             combineZone.classList.remove('highlight');
@@ -966,6 +1011,11 @@
         placeholderCard.addEventListener('touchstart', (e) => {
             e.preventDefault();
             placeholderCard.classList.add('highlight');
+        });
+        
+        placeholderCard.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            // Keep the highlight during movement
         });
         
         placeholderCard.addEventListener('touchend', (e) => {
