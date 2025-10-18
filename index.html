@@ -450,16 +450,16 @@
         <button id="combineBtn" class="combine-btn">Combine</button>
     </div>
     
-    <div id="gameOver" style="display: none; text-align: center; margin-top: 50px;">
-        <h2>Game Over!</h2>
-        <div>Final Score: <span id="finalScore">0</span></div>
-        <div id="result"></div>
+    <div id="gameOver" style="display: none; text-align: center; margin-top: 20px;">
+        <h2 style="margin-bottom: 20px;">Game Over!</h2>
+        <div style="margin-bottom: 15px;">Final Score: <span id="finalScore">0</span></div>
+        <div id="result" style="margin-bottom: 25px;"></div>
         <button onclick="restartGame()">Restart</button>
     </div>
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.2
+        v0.2.1
     </div>
 
     <script>
@@ -551,6 +551,14 @@
                 } else {
                     document.getElementById('result').textContent = `You need ${Math.ceil(gameState.targetScore - gameState.currentResult)} more points to win!`;
                 }
+                
+                // Hide combine functionality when game is over
+                document.getElementById('combineZone').style.display = 'none';
+                document.getElementById('combineBtn').style.display = 'none';
+                
+                // Hide play button when game is over
+                document.getElementById('playBtn').style.display = 'none';
+                
                 return;
             }
 
@@ -589,9 +597,14 @@
                     playBtn.disabled = true;
                     playBtn.classList.add('disabled');
                 }
-                // Combine button disabled in dual mode
-                combineBtn.disabled = true;
-                combineBtn.classList.remove('enabled');
+                // Combine button logic in dual mode - enabled when exactly 2 numbers in combine zone
+                if (!gameState.combinationUsed && gameState.combineZoneCards.length === 2) {
+                    combineBtn.disabled = false;
+                    combineBtn.classList.add('enabled');
+                } else {
+                    combineBtn.disabled = true;
+                    combineBtn.classList.remove('enabled');
+                }
             } else {
                 // Normal mode: enabled when exactly 1 number selected for play
                 if (gameState.selectedNumber !== null && gameState.selectedForCombination.length === 0) {
@@ -1221,6 +1234,14 @@
                 combineZoneCards: []
             };
             document.getElementById('gameOver').style.display = 'none';
+            
+            // Show combine functionality when restarting game
+            document.getElementById('combineZone').style.display = 'flex';
+            document.getElementById('combineBtn').style.display = 'block';
+            
+            // Show play button when restarting game
+            document.getElementById('playBtn').style.display = 'block';
+            
             updateDisplay();
             renderHand();
         }
