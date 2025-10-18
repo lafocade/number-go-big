@@ -162,6 +162,46 @@
             color: #ff4444 !important;
         }
         
+        .equals-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+            min-width: 40px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102, 102, 102, 0.1);
+            border-radius: 8px;
+            border: 2px solid transparent;
+        }
+        
+        .equals-display.ready {
+            color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            border-color: #4CAF50;
+        }
+        
+        .equals-display:hover {
+            transform: scale(1.1);
+        }
+        
+        .equals-display.ready:hover {
+            color: #45a049;
+            background: rgba(76, 175, 80, 0.2);
+        }
+        
+        .equals-display:disabled {
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            background: rgba(102, 102, 102, 0.1);
+            border-color: transparent;
+        }
+        
         .placeholder-card {
             width: 80px;
             height: 60px;
@@ -470,6 +510,7 @@
         <div class="fixed-card" id="fixedCard">10</div>
         <div class="operator-display" id="operatorDisplay">+</div>
         <div class="placeholder-card" id="placeholderCard">?</div>
+        <div class="equals-display" id="equalsDisplay">=</div>
     </div>
     
     <div class="dual-operation-display" id="dualOperationDisplay" style="display: none;">
@@ -478,6 +519,7 @@
         <div class="dual-placeholder-card" id="dualPlaceholderCard1">?</div>
         <div class="operator-display" id="dualOperatorDisplay2">+</div>
         <div class="dual-placeholder-card" id="dualPlaceholderCard2">?</div>
+        <div class="equals-display" id="dualEqualsDisplay">=</div>
     </div>
     
     <div class="score-info">
@@ -488,12 +530,9 @@
         <!-- Numbers will be generated here -->
     </div>
     
-    <div class="controls">
-        <button id="playBtn">Play</button>
-    </div>
     
     <div class="combine-zone" id="combineZone">
-        <div class="combine-zone-text" id="combineZoneText">Drag 2 cards here to combine</div>
+        <div class="combine-zone-text" id="combineZoneText">Combine two numbers</div>
     </div>
     
     <div class="controls">
@@ -509,7 +548,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.2.2
+        v0.2.3
     </div>
 
     <script>
@@ -623,8 +662,9 @@
                 document.getElementById('combineZone').style.display = 'none';
                 document.getElementById('combineBtn').style.display = 'none';
                 
-                // Hide play button when game is over
-                document.getElementById('playBtn').style.display = 'none';
+                // Hide equals signs when game is over
+                document.getElementById('equalsDisplay').style.display = 'none';
+                document.getElementById('dualEqualsDisplay').style.display = 'none';
                 
                 return;
             }
@@ -651,18 +691,19 @@
             updateCombineZone();
 
             // Always show both buttons
-            const playBtn = document.getElementById('playBtn');
+            const equalsDisplay = document.getElementById('equalsDisplay');
+            const dualEqualsDisplay = document.getElementById('dualEqualsDisplay');
             const combineBtn = document.getElementById('combineBtn');
 
-            // Play button logic
+            // Equals sign logic
             if (gameState.dualMode) {
                 // In dual mode: enabled when exactly 2 numbers selected
                 if (gameState.selectedNumbers.length === 2 && gameState.selectedNumbers[0] !== null && gameState.selectedNumbers[1] !== null) {
-                    playBtn.disabled = false;
-                    playBtn.classList.remove('disabled');
+                    dualEqualsDisplay.disabled = false;
+                    dualEqualsDisplay.classList.add('ready');
                 } else {
-                    playBtn.disabled = true;
-                    playBtn.classList.add('disabled');
+                    dualEqualsDisplay.disabled = true;
+                    dualEqualsDisplay.classList.remove('ready');
                 }
                 // Combine button logic in dual mode - enabled when exactly 2 numbers in combine zone
                 if (!gameState.combinationUsed && gameState.combineZoneCards.length === 2) {
@@ -675,11 +716,11 @@
             } else {
                 // Normal mode: enabled when exactly 1 number selected for play
                 if (gameState.selectedNumber !== null && gameState.selectedForCombination.length === 0) {
-                    playBtn.disabled = false;
-                    playBtn.classList.remove('disabled');
+                    equalsDisplay.disabled = false;
+                    equalsDisplay.classList.add('ready');
                 } else {
-                    playBtn.disabled = true;
-                    playBtn.classList.add('disabled');
+                    equalsDisplay.disabled = true;
+                    equalsDisplay.classList.remove('ready');
                 }
 
                 // Combine button logic - enabled when exactly 2 numbers in combine zone
@@ -1306,15 +1347,17 @@
             document.getElementById('combineZone').style.display = 'flex';
             document.getElementById('combineBtn').style.display = 'block';
             
-            // Show play button when restarting game
-            document.getElementById('playBtn').style.display = 'block';
+            // Show equals signs when restarting game
+            document.getElementById('equalsDisplay').style.display = 'flex';
+            document.getElementById('dualEqualsDisplay').style.display = 'flex';
             
             updateDisplay();
             renderHand();
         }
 
         // Event listeners
-        document.getElementById('playBtn').onclick = playTurn;
+        document.getElementById('equalsDisplay').onclick = playTurn;
+        document.getElementById('dualEqualsDisplay').onclick = playTurn;
         document.getElementById('combineBtn').onclick = () => {
             // Only execute if 2 numbers are in combine zone
             if (gameState.combineZoneCards.length === 2) {
