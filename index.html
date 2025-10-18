@@ -676,7 +676,7 @@
     
     <div class="game-header">
         <div class="score-challenge">
-            Score <span id="targetScore">300</span> to win
+            Score <span id="targetScore">300</span> to win. One new number every round.
         </div>
     </div>
     
@@ -709,7 +709,7 @@
             <div class="combine-zone-text" id="combineZoneText">Combine two numbers</div>
         </div>
         <div class="combine-action" id="combineAction">
-            <div class="combine-icon">&</div>
+            <div class="combine-icon">+</div>
         </div>
     </div>
     
@@ -909,7 +909,13 @@
             // Equals sign logic
             if (gameState.dualMode) {
                 // In dual mode: enabled when exactly 2 numbers selected
-                if (gameState.selectedNumbers.length === 2 && gameState.selectedNumbers[0] !== null && gameState.selectedNumbers[1] !== null) {
+                const validCards = gameState.selectedNumbers.filter(card => card !== null && card !== undefined);
+                console.log('Dual mode validation:', {
+                    selectedNumbers: gameState.selectedNumbers,
+                    validCards: validCards,
+                    validCardsLength: validCards.length
+                });
+                if (validCards.length === 2) {
                     dualEqualsDisplay.disabled = false;
                     dualEqualsDisplay.classList.add('ready');
                 } else {
@@ -1132,7 +1138,7 @@
             if (!cardObj) return;
             
             // If there's already a card in this slot, return it to the hand first
-            if (gameState.selectedNumbers[index] !== null) {
+            if (gameState.selectedNumbers[index] !== null && gameState.selectedNumbers[index] !== undefined) {
                 gameState.availableNumbers.push(gameState.selectedNumbers[index]);
             }
             
@@ -1367,7 +1373,7 @@
                     originalIndex: index
                 });
                 
-                // Remove from hand
+                // Remove from hand for visual feedback
                 gameState.availableNumbers.splice(index, 1);
                 
                 // Adjust indices for remaining cards in combine zone
@@ -1502,11 +1508,15 @@
 
         function playTurn() {
             if (gameState.dualMode) {
-                const firstResult = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.selectedNumbers[0].value);
-                const finalResult = calculateResult(firstResult, gameState.secondOperator, gameState.selectedNumbers[1].value);
-                gameState.currentResult = finalResult;
+                // Get the two selected cards (filter out null and undefined values)
+                const selectedCards = gameState.selectedNumbers.filter(card => card !== null && card !== undefined);
+                if (selectedCards.length === 2) {
+                    const firstResult = calculateResult(gameState.currentResult, gameState.currentOperator, selectedCards[0].value);
+                    const finalResult = calculateResult(firstResult, gameState.secondOperator, selectedCards[1].value);
+                    gameState.currentResult = finalResult;
+                }
                 
-                // selectedNumbers are already removed from availableNumbers when dragged
+                // Clear selected numbers
                 gameState.selectedNumbers = [];
             } else {
                 const result = calculateResult(gameState.currentResult, gameState.currentOperator, gameState.selectedNumber.value);
@@ -1547,13 +1557,13 @@
             if (gameState.combineZoneCards.length === 2) {
                 const result = gameState.combineZoneCards[0].number + gameState.combineZoneCards[1].number;
                 
-                // Add combination result (cards already removed from hand when dragged)
-            const newCombinedCard = {
-                id: 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                value: result
-            };
-            gameState.availableNumbers.push(newCombinedCard);
-            gameState.newestCardId = newCombinedCard.id;
+                // Add combination result (original cards already removed from hand when dragged)
+                const newCombinedCard = {
+                    id: 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                    value: result
+                };
+                gameState.availableNumbers.push(newCombinedCard);
+                gameState.newestCardId = newCombinedCard.id;
                 gameState.combinationUsed = true;
                 gameState.combineZoneCards = [];
             }
