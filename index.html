@@ -70,12 +70,115 @@
         button.combine-btn.enabled {
             background: #4CAF50 !important;
         }
+        .game-header {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .score-challenge {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+        }
+        
+        .target-icon {
+            margin-right: 8px;
+        }
+        
+        .score-progress {
+            font-size: 14px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+        
+        .score-challenge.almost-there {
+            color: #ff6b35;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .score-challenge.getting-close {
+            color: #ffa726;
+        }
+        
+        .score-challenge.far-from-target {
+            color: #ffffff;
+        }
+        
+        .score-progress.almost-there {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+        
+        .score-progress.getting-close {
+            color: #ffa726;
+        }
+        
+        .score-progress.far-from-target {
+            color: #ccc;
+        }
+        
+        .hand-container {
+            position: relative;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        
+        .hand-label {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ccc;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
         .hand {
             display: flex;
             gap: 10px;
             margin: 20px 0;
             flex-wrap: wrap;
             justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s ease;
+            min-height: 80px;
+        }
+        
+        .hand.has-cards {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Dynamic sizing based on card count */
+        .hand:has(.number-card:nth-child(6)) {
+            gap: 8px;
+            padding: 12px;
+        }
+        
+        .hand:has(.number-card:nth-child(7)) {
+            gap: 6px;
+            padding: 10px;
+        }
+        
+        .hand:has(.number-card:nth-child(8)) {
+            gap: 4px;
+            padding: 8px;
+        }
+        
+        .hand:has(.number-card:nth-child(9)) {
+            gap: 3px;
+            padding: 6px;
+        }
+        
+        .hand:has(.number-card:nth-child(10)) {
+            gap: 2px;
+            padding: 4px;
         }
         .number-card {
             width: 55px;
@@ -138,12 +241,9 @@
         .fixed-card {
             width: 80px;
             height: 60px;
-            background: #555;
-            border: 3px solid #777;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
             font-weight: bold;
             font-size: 24px;
             color: white;
@@ -180,9 +280,9 @@
         }
         
         .equals-display.ready {
-            color: #4CAF50;
-            background: rgba(76, 175, 80, 0.1);
-            border-color: #4CAF50;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
         }
         
         .equals-display:hover {
@@ -190,8 +290,8 @@
         }
         
         .equals-display.ready:hover {
-            color: #45a049;
-            background: rgba(76, 175, 80, 0.2);
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .equals-display:disabled {
@@ -312,25 +412,25 @@
         .combine-zone {
             width: 200px;
             height: 80px;
-            border: 3px dashed #4CAF50;
+            border: 3px dashed #666;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 20px auto;
-            background: rgba(76, 175, 80, 0.1);
+            background: rgba(102, 102, 102, 0.1);
             transition: all 0.3s ease;
         }
         
         .combine-zone.drag-over {
-            border-color: #45a049;
-            background: rgba(76, 175, 80, 0.2);
+            border-color: #888;
+            background: rgba(102, 102, 102, 0.2);
             transform: scale(1.05);
         }
         
         .combine-zone.has-cards {
-            border-color: #2196F3;
-            background: rgba(33, 150, 243, 0.1);
+            border-color: #888;
+            background: rgba(102, 102, 102, 0.15);
         }
         
         .combine-zone.highlight {
@@ -369,8 +469,8 @@
         }
         
         .combine-action.ready {
-            background: rgba(33, 150, 243, 0.1);
-            border-color: #2196F3;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
         }
         
         .combine-action:hover {
@@ -378,7 +478,7 @@
         }
         
         .combine-action.ready:hover {
-            background: rgba(33, 150, 243, 0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .combine-action:disabled {
@@ -393,14 +493,14 @@
         }
         
         .combine-action.ready .combine-icon {
-            color: #2196F3;
+            color: white;
         }
         
         .new-label {
             position: absolute;
             top: -8px;
             right: -8px;
-            background: #ff6b35;
+            background: #666;
             color: white;
             font-size: 10px;
             font-weight: bold;
@@ -574,6 +674,12 @@
         </div>
     </div>
     
+    <div class="game-header">
+        <div class="score-challenge">
+            Score <span id="targetScore">300</span> to win
+        </div>
+    </div>
+    
     <div class="operation-display" id="operationDisplay">
         <div class="fixed-card" id="fixedCard">10</div>
         <div class="operator-display" id="operatorDisplay">+</div>
@@ -590,12 +696,11 @@
         <div class="equals-display" id="dualEqualsDisplay">=</div>
     </div>
     
-    <div class="score-info">
-        <div>Score 300 to win</div>
-    </div>
-    
-    <div class="hand" id="hand">
-        <!-- Numbers will be generated here -->
+    <div class="hand-container">
+        <div class="hand" id="hand">
+            <div class="hand-label">Your numbers</div>
+            <!-- Numbers will be generated here -->
+        </div>
     </div>
     
     
@@ -617,7 +722,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.2.4
+        v0.4
     </div>
 
     <script>
@@ -652,6 +757,16 @@
             if (absNumber <= 6) return 'uncommon';
             if (absNumber <= 8) return 'rare';
             return 'legendary';
+        }
+        
+        function getRarityBorderColor(rarity) {
+            switch(rarity) {
+                case 'common': return '#888'; // Grey
+                case 'uncommon': return '#2196F3'; // Blue
+                case 'rare': return '#9C27B0'; // Purple
+                case 'legendary': return '#FF9800'; // Orange
+                default: return '#888';
+            }
         }
 
         function generateRandomOperator() {
@@ -714,10 +829,36 @@
                 roundDots.appendChild(dot);
             }
         }
+        
+        function updateScoreProgress() {
+            const currentScore = Math.ceil(gameState.currentResult);
+            const targetScore = gameState.targetScore;
+            const pointsNeeded = targetScore - currentScore;
+            
+            // Update target score display
+            document.getElementById('targetScore').textContent = targetScore;
+            
+            // Add visual feedback based on progress
+            const scoreChallenge = document.querySelector('.score-challenge');
+            
+            // Remove existing classes
+            scoreChallenge.classList.remove('almost-there', 'getting-close', 'far-from-target');
+            
+            if (pointsNeeded <= 50) {
+                scoreChallenge.classList.add('almost-there');
+            } else if (pointsNeeded <= 100) {
+                scoreChallenge.classList.add('getting-close');
+            } else {
+                scoreChallenge.classList.add('far-from-target');
+            }
+        }
 
         function updateDisplay() {
             // Update round dots
             updateRoundDots();
+            
+            // Update score progress
+            updateScoreProgress();
             
             if (gameState.gamePhase === 'game_over') {
                 document.getElementById('gameOver').style.display = 'block';
@@ -850,7 +991,8 @@
                     // selectedNumber is now a card object
                     placeholderCard.textContent = gameState.selectedNumber.value;
                     placeholderCard.style.background = '#333';
-                    placeholderCard.style.borderColor = '#2196F3'; // Blue border like original cards
+                    const rarity = getNumberRarity(gameState.selectedNumber.value);
+                    placeholderCard.style.borderColor = getRarityBorderColor(rarity);
                     placeholderCard.style.color = '#ffffff'; // White text like original cards
                     placeholderCard.style.borderStyle = 'solid'; // Solid border instead of dashed
                     
@@ -933,7 +1075,8 @@
                 const cardObj = gameState.selectedNumbers[index];
                 placeholderCard.textContent = cardObj.value;
                 placeholderCard.style.background = '#333';
-                placeholderCard.style.borderColor = '#2196F3';
+                const rarity = getNumberRarity(cardObj.value);
+                placeholderCard.style.borderColor = getRarityBorderColor(rarity);
                 placeholderCard.style.color = '#ffffff';
                 placeholderCard.style.borderStyle = 'solid';
                 
@@ -988,6 +1131,11 @@
             
             if (!cardObj) return;
             
+            // If there's already a card in this slot, return it to the hand first
+            if (gameState.selectedNumbers[index] !== null) {
+                gameState.availableNumbers.push(gameState.selectedNumbers[index]);
+            }
+            
             // Remove from hand first
             gameState.availableNumbers.splice(cardIndex, 1);
             
@@ -1021,6 +1169,11 @@
             
             const index = parseInt(e.dataTransfer.getData('text/plain'));
             const cardObj = gameState.availableNumbers[index];
+            
+            // If there's already a selected number, return it to the hand first
+            if (gameState.selectedNumber !== null) {
+                gameState.availableNumbers.push(gameState.selectedNumber);
+            }
             
             // Remove from hand first
             gameState.availableNumbers.splice(index, 1);
@@ -1067,7 +1220,7 @@
             
             if (gameState.combineZoneCards.length === 0) {
                 combineZoneText.style.display = 'block';
-                combineZoneText.textContent = 'Drag 2 cards here to combine';
+                combineZoneText.textContent = 'Combine two numbers';
                 combineZone.classList.remove('has-cards', 'used');
             } else {
                 combineZoneText.style.display = 'none';
@@ -1106,6 +1259,13 @@
         function renderHand() {
             const hand = document.getElementById('hand');
             hand.innerHTML = '';
+            
+            // Add has-cards class if there are cards
+            if (gameState.availableNumbers.length > 0) {
+                hand.classList.add('has-cards');
+            } else {
+                hand.classList.remove('has-cards');
+            }
             
             gameState.availableNumbers.forEach((cardObj, index) => {
                 const card = document.createElement('div');
