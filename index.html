@@ -307,6 +307,43 @@
             color: #999 !important;
         }
         
+        /* Round dots styling */
+        .round-dots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .round-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            transition: all 0.3s ease;
+        }
+        
+        .round-dot.completed {
+            background: #ffffff;
+        }
+        
+        .round-dot.current {
+            background: #ffffff;
+            animation: breathing 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes breathing {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.3);
+                opacity: 0.8;
+            }
+        }
+        
         .combine-zone-text {
             color: #666;
             font-size: 14px;
@@ -417,7 +454,10 @@
 <body>
     <h1>NUMBER GO BIG</h1>
     <div class="info">
-        <div>Score 300 to win. Round <span id="round">1</span> / 10</div>
+        <div>Score 300 to win</div>
+        <div class="round-dots" id="roundDots">
+            <!-- Round dots will be generated here -->
+        </div>
     </div>
     
     <div class="operation-display" id="operationDisplay">
@@ -538,10 +578,27 @@
             return Math.ceil(result);
         }
 
+        function updateRoundDots() {
+            const roundDots = document.getElementById('roundDots');
+            roundDots.innerHTML = '';
+            
+            for (let i = 1; i <= 10; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'round-dot';
+                
+                if (i < gameState.round) {
+                    dot.classList.add('completed');
+                } else if (i === gameState.round) {
+                    dot.classList.add('current');
+                }
+                
+                roundDots.appendChild(dot);
+            }
+        }
+
         function updateDisplay() {
-            // Cap the round display at 10
-            const displayRound = Math.min(gameState.round, gameState.maxRounds);
-            document.getElementById('round').textContent = displayRound;
+            // Update round dots
+            updateRoundDots();
             
             if (gameState.gamePhase === 'game_over') {
                 document.getElementById('gameOver').style.display = 'block';
