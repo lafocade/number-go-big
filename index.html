@@ -78,7 +78,7 @@
         .score-challenge {
             font-size: 18px;
             font-weight: bold;
-            color: white;
+            color: #666;
             margin-bottom: 8px;
         }
         
@@ -90,32 +90,6 @@
             font-size: 14px;
             color: #ccc;
             margin-bottom: 15px;
-        }
-        
-        .score-challenge.almost-there {
-            color: #ff6b35;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        
-        .score-challenge.getting-close {
-            color: #ffa726;
-        }
-        
-        .score-challenge.far-from-target {
-            color: #ffffff;
-        }
-        
-        .score-progress.almost-there {
-            color: #ff6b35;
-            font-weight: bold;
-        }
-        
-        .score-progress.getting-close {
-            color: #ffa726;
-        }
-        
-        .score-progress.far-from-target {
-            color: #ccc;
         }
         
         .hand-container {
@@ -248,6 +222,9 @@
             font-size: 24px;
             color: white;
             cursor: default;
+            border: 4px solid #888;
+            border-radius: 8px;
+            background: #333;
         }
         
         .operator-display {
@@ -276,7 +253,7 @@
             justify-content: center;
             background: rgba(102, 102, 102, 0.1);
             border-radius: 50%;
-            border: 2px solid #666;
+            border: 3px solid #666;
         }
         
         .equals-display.ready {
@@ -303,16 +280,16 @@
         }
         
         .placeholder-card {
-            width: 80px;
-            height: 60px;
-            background: rgba(33, 150, 243, 0.1);
-            border: 3px dashed #2196F3;
+            width: 55px;
+            height: 40px;
+            background: transparent;
+            border: 3px dashed #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
+            border-radius: 5px;
             color: #666;
-            font-size: 18px;
+            font-size: 10px;
             position: relative;
             transition: all 0.3s ease;
         }
@@ -325,6 +302,11 @@
         
         .placeholder-card.highlight {
             animation: pulse 1s infinite;
+        }
+        
+        .placeholder-card.active {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
         }
         
         .placeholder-card .remove-btn {
@@ -361,16 +343,16 @@
         }
         
         .dual-placeholder-card {
-            width: 80px;
-            height: 60px;
-            background: rgba(33, 150, 243, 0.1);
-            border: 3px dashed #2196F3;
+            width: 55px;
+            height: 40px;
+            background: transparent;
+            border: 3px dashed #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
+            border-radius: 5px;
             color: #666;
-            font-size: 18px;
+            font-size: 10px;
             position: relative;
             transition: all 0.3s ease;
         }
@@ -383,6 +365,11 @@
         
         .dual-placeholder-card.highlight {
             animation: pulse 1s infinite;
+        }
+        
+        .dual-placeholder-card.active {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
         }
         
         .dual-placeholder-card .remove-btn {
@@ -459,7 +446,7 @@
             width: 50px;
             height: 50px;
             background: rgba(102, 102, 102, 0.1);
-            border: 2px solid #666;
+            border: 3px solid #666;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -508,6 +495,30 @@
             border-radius: 10px;
             z-index: 10;
             animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .result-label {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #4CAF50;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            z-index: 10;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .fixed-card.result-animation {
+            animation: popScale 0.6s ease-out;
+        }
+        
+        @keyframes popScale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
         }
         
         @keyframes pulse {
@@ -625,6 +636,30 @@
             position: relative;
         }
         
+        .combine-card.common {
+            border-color: #888;
+        }
+        
+        .combine-card.uncommon {
+            border-color: #2196F3;
+        }
+        
+        .combine-card.rare {
+            border-color: #9C27B0;
+        }
+        
+        .combine-card.legendary {
+            border-color: #FF9800;
+        }
+        
+        .combine-card.negative {
+            color: #ff4444;
+        }
+        
+        .combine-card.positive {
+            color: #ffffff;
+        }
+        
         .combine-card .remove-btn {
             position: absolute;
             top: -8px;
@@ -676,23 +711,23 @@
     
     <div class="game-header">
         <div class="score-challenge">
-            Score <span id="targetScore">300</span> to win. One new number every round.
+            You have ten rounds. You get one new number every round. Score <span id="targetScore">300</span> to win.
         </div>
     </div>
     
     <div class="operation-display" id="operationDisplay">
         <div class="fixed-card" id="fixedCard">10</div>
         <div class="operator-display" id="operatorDisplay">+</div>
-        <div class="placeholder-card" id="placeholderCard">...</div>
+        <div class="placeholder-card" id="placeholderCard">drop here</div>
         <div class="equals-display" id="equalsDisplay">=</div>
     </div>
     
     <div class="dual-operation-display" id="dualOperationDisplay" style="display: none;">
         <div class="fixed-card" id="dualFixedCard">10</div>
         <div class="operator-display" id="dualOperatorDisplay1">+</div>
-        <div class="dual-placeholder-card" id="dualPlaceholderCard1">...</div>
+        <div class="dual-placeholder-card" id="dualPlaceholderCard1">drop here</div>
         <div class="operator-display" id="dualOperatorDisplay2">+</div>
-        <div class="dual-placeholder-card" id="dualPlaceholderCard2">...</div>
+        <div class="dual-placeholder-card" id="dualPlaceholderCard2">drop here</div>
         <div class="equals-display" id="dualEqualsDisplay">=</div>
     </div>
     
@@ -713,7 +748,7 @@
         </div>
     </div>
     
-    <div id="gameOver" style="display: none; text-align: center; margin-top: 20px;">
+    <div id="gameOver" style="display: none; text-align: center; margin-top: 10px;">
         <h2 style="margin-bottom: 20px;">Game Over!</h2>
         <div style="margin-bottom: 15px;">Final Score: <span id="finalScore">0</span></div>
         <div id="result" style="margin-bottom: 25px;"></div>
@@ -722,7 +757,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.6
+        v0.7
     </div>
 
     <script>
@@ -830,39 +865,19 @@
             }
         }
         
-        function updateScoreProgress() {
-            const currentScore = Math.ceil(gameState.currentResult);
-            const targetScore = gameState.targetScore;
-            const pointsNeeded = targetScore - currentScore;
-            
-            // Update target score display
-            document.getElementById('targetScore').textContent = targetScore;
-            
-            // Add visual feedback based on progress
-            const scoreChallenge = document.querySelector('.score-challenge');
-            
-            // Remove existing classes
-            scoreChallenge.classList.remove('almost-there', 'getting-close', 'far-from-target');
-            
-            if (pointsNeeded <= 50) {
-                scoreChallenge.classList.add('almost-there');
-            } else if (pointsNeeded <= 100) {
-                scoreChallenge.classList.add('getting-close');
-            } else {
-                scoreChallenge.classList.add('far-from-target');
-            }
-        }
-
         function updateDisplay() {
             // Update round dots
             updateRoundDots();
             
-            // Update score progress
-            updateScoreProgress();
             
             if (gameState.gamePhase === 'game_over') {
                 document.getElementById('gameOver').style.display = 'block';
                 document.getElementById('finalScore').textContent = Math.ceil(gameState.currentResult);
+                
+                // Update the fixed card to show the final result
+                document.getElementById('fixedCard').textContent = Math.ceil(gameState.currentResult);
+                document.getElementById('dualFixedCard').textContent = Math.ceil(gameState.currentResult);
+                
                 if (gameState.currentResult >= gameState.targetScore) {
                     document.getElementById('result').textContent = 'Congratulations! You reached the target!';
                 } else {
@@ -876,6 +891,14 @@
                 // Hide equals signs when game is over
                 document.getElementById('equalsDisplay').style.display = 'none';
                 document.getElementById('dualEqualsDisplay').style.display = 'none';
+                
+                // Hide operators and placeholders when game is over
+                document.getElementById('operatorDisplay').style.display = 'none';
+                document.getElementById('placeholderCard').style.display = 'none';
+                document.getElementById('dualOperatorDisplay1').style.display = 'none';
+                document.getElementById('dualOperatorDisplay2').style.display = 'none';
+                document.getElementById('dualPlaceholderCard1').style.display = 'none';
+                document.getElementById('dualPlaceholderCard2').style.display = 'none';
                 
                 return;
             }
@@ -997,10 +1020,20 @@
                     // selectedNumber is now a card object
                     placeholderCard.textContent = gameState.selectedNumber.value;
                     placeholderCard.style.background = '#333';
+                    placeholderCard.style.fontSize = '16px';
+                    placeholderCard.style.fontWeight = 'bold';
                     const rarity = getNumberRarity(gameState.selectedNumber.value);
                     placeholderCard.style.borderColor = getRarityBorderColor(rarity);
-                    placeholderCard.style.color = '#ffffff'; // White text like original cards
                     placeholderCard.style.borderStyle = 'solid'; // Solid border instead of dashed
+                    
+                    // Preserve negative color
+                    if (gameState.selectedNumber.value < 0) {
+                        placeholderCard.style.color = '#ff4444';
+                        placeholderCard.classList.add('negative');
+                    } else {
+                        placeholderCard.style.color = '#ffffff';
+                        placeholderCard.classList.remove('negative');
+                    }
                     
                     // Add remove button
                     const removeBtn = document.createElement('button');
@@ -1009,9 +1042,14 @@
                     removeBtn.onclick = removeFromPlayZone;
                     placeholderCard.appendChild(removeBtn);
                 } else {
-                    placeholderCard.textContent = '...';
-                    placeholderCard.style.background = '#333';
-                    placeholderCard.style.borderColor = '#666';
+                    placeholderCard.textContent = 'choose';
+                    placeholderCard.style.background = 'transparent';
+                    placeholderCard.style.borderColor = '#ffffff';
+                    placeholderCard.style.borderStyle = 'dashed';
+                    placeholderCard.style.fontSize = '10px';
+                    placeholderCard.style.fontWeight = 'bold';
+                    placeholderCard.style.color = '#ffffff';
+                    placeholderCard.classList.add('active');
                 }
             }
             
@@ -1081,10 +1119,20 @@
                 const cardObj = gameState.selectedNumbers[index];
                 placeholderCard.textContent = cardObj.value;
                 placeholderCard.style.background = '#333';
+                placeholderCard.style.fontSize = '16px';
+                placeholderCard.style.fontWeight = 'bold';
                 const rarity = getNumberRarity(cardObj.value);
                 placeholderCard.style.borderColor = getRarityBorderColor(rarity);
-                placeholderCard.style.color = '#ffffff';
                 placeholderCard.style.borderStyle = 'solid';
+                
+                // Preserve negative color
+                if (cardObj.value < 0) {
+                    placeholderCard.style.color = '#ff4444';
+                    placeholderCard.classList.add('negative');
+                } else {
+                    placeholderCard.style.color = '#ffffff';
+                    placeholderCard.classList.remove('negative');
+                }
                 
                 // Add remove button
                 const removeBtn = document.createElement('button');
@@ -1093,10 +1141,13 @@
                 removeBtn.onclick = () => removeFromDualPlayZone(index);
                 placeholderCard.appendChild(removeBtn);
             } else {
-                placeholderCard.textContent = '...';
-                placeholderCard.style.background = '#333';
-                placeholderCard.style.borderColor = '#666';
+                placeholderCard.textContent = 'drop here';
+                placeholderCard.style.background = 'transparent';
+                placeholderCard.style.borderColor = '#ffffff';
                 placeholderCard.style.borderStyle = 'dashed';
+                placeholderCard.style.fontSize = '10px';
+                placeholderCard.style.fontWeight = 'normal';
+                placeholderCard.classList.add('active');
             }
         }
         
@@ -1239,6 +1290,7 @@
                     const rarity = getNumberRarity(cardData.number);
                     card.classList.add(rarity);
                     
+                    // Preserve negative/positive styling
                     if (cardData.number < 0) {
                         card.classList.add('negative');
                     } else {
@@ -1568,6 +1620,47 @@
                 gameState.selectedNumber = null;
             }
             
+            // Add result animation and label
+            const fixedCard = document.getElementById('fixedCard');
+            const dualFixedCard = document.getElementById('dualFixedCard');
+            
+            // Add animation class
+            if (gameState.dualMode) {
+                dualFixedCard.classList.add('result-animation');
+            } else {
+                fixedCard.classList.add('result-animation');
+            }
+            
+            // Add result label
+            const resultLabel = document.createElement('div');
+            resultLabel.className = 'result-label';
+            resultLabel.textContent = 'result';
+            
+            if (gameState.dualMode) {
+                dualFixedCard.style.position = 'relative';
+                dualFixedCard.appendChild(resultLabel);
+            } else {
+                fixedCard.style.position = 'relative';
+                fixedCard.appendChild(resultLabel);
+            }
+            
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                if (gameState.dualMode) {
+                    dualFixedCard.classList.remove('result-animation');
+                } else {
+                    fixedCard.classList.remove('result-animation');
+                }
+            }, 600);
+            
+            // Remove result label after 3 seconds
+            setTimeout(() => {
+                const existingLabel = (gameState.dualMode ? dualFixedCard : fixedCard).querySelector('.result-label');
+                if (existingLabel) {
+                    existingLabel.remove();
+                }
+            }, 3000);
+            
             // Add new number
             const newCard = generateRandomNumber();
             gameState.availableNumbers.push(newCard);
@@ -1646,6 +1739,14 @@
             // Show equals signs when restarting game
             document.getElementById('equalsDisplay').style.display = 'flex';
             document.getElementById('dualEqualsDisplay').style.display = 'flex';
+            
+            // Show operators and placeholders when restarting game
+            document.getElementById('operatorDisplay').style.display = 'flex';
+            document.getElementById('placeholderCard').style.display = 'flex';
+            document.getElementById('dualOperatorDisplay1').style.display = 'flex';
+            document.getElementById('dualOperatorDisplay2').style.display = 'flex';
+            document.getElementById('dualPlaceholderCard1').style.display = 'flex';
+            document.getElementById('dualPlaceholderCard2').style.display = 'flex';
             
             updateDisplay();
             renderHand();
