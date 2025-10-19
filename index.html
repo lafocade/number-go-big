@@ -757,7 +757,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.8
+        v0.9
     </div>
 
     <script>
@@ -1499,8 +1499,8 @@
                 // Add to play zone
                 const index = parseInt(e.target.dataset.index);
                 handlePlayZoneTouch(index);
-            } else if (elementBelow && elementBelow.closest('.dual-placeholder-card')) {
-                // Add to dual play zone
+            } else if (gameState.dualMode && elementBelow && elementBelow.closest('.dual-placeholder-card')) {
+                // Add to dual play zone (only in dual mode)
                 const index = parseInt(e.target.dataset.index);
                 const dualPlaceholder = elementBelow.closest('.dual-placeholder-card');
                 const placeholderIndex = dualPlaceholder.id === 'dualPlaceholderCard1' ? 0 : 1;
@@ -1541,16 +1541,19 @@
         function handlePlayZoneTouch(index) {
             const cardObj = gameState.availableNumbers[index];
             
-            if (gameState.selectedNumber === null) {
-                // Remove from hand first
-                gameState.availableNumbers.splice(index, 1);
-                
-                // Select the number for play
-                gameState.selectedNumber = cardObj;
-                
-                updateDisplay();
-                renderHand();
+            // If there's already a selected number, return it to the hand first
+            if (gameState.selectedNumber !== null) {
+                gameState.availableNumbers.push(gameState.selectedNumber);
             }
+            
+            // Remove from hand first
+            gameState.availableNumbers.splice(index, 1);
+            
+            // Select the number for play
+            gameState.selectedNumber = cardObj;
+            
+            updateDisplay();
+            renderHand();
         }
         
         
