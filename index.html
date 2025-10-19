@@ -1158,19 +1158,13 @@
             placeholderCard.removeEventListener('dragover', handleDragOver);
             placeholderCard.removeEventListener('dragleave', handleDragLeave);
             placeholderCard.removeEventListener('drop', handleDualPlaceholderDrop);
-            placeholderCard.removeEventListener('touchstart', handleDualTouchStart);
-            placeholderCard.removeEventListener('touchmove', handleDualTouchMove);
-            placeholderCard.removeEventListener('touchend', handleDualTouchEnd);
             
             // Add event listeners directly to the element
             placeholderCard.addEventListener('dragover', handleDragOver);
             placeholderCard.addEventListener('dragleave', handleDragLeave);
             placeholderCard.addEventListener('drop', (e) => handleDualPlaceholderDrop(e, index));
             
-            // Add touch support
-            placeholderCard.addEventListener('touchstart', (e) => handleDualTouchStart(e, index));
-            placeholderCard.addEventListener('touchmove', (e) => handleDualTouchMove(e));
-            placeholderCard.addEventListener('touchend', (e) => handleDualTouchEnd(e, index));
+            // Touch support is handled by the main touch handler on number cards
         }
         
         function handleDualPlaceholderDrop(e, index) {
@@ -1505,6 +1499,12 @@
                 // Add to play zone
                 const index = parseInt(e.target.dataset.index);
                 handlePlayZoneTouch(index);
+            } else if (elementBelow && elementBelow.closest('.dual-placeholder-card')) {
+                // Add to dual play zone
+                const index = parseInt(e.target.dataset.index);
+                const dualPlaceholder = elementBelow.closest('.dual-placeholder-card');
+                const placeholderIndex = dualPlaceholder.id === 'dualPlaceholderCard1' ? 0 : 1;
+                handleDualPlayZoneTouch(index, placeholderIndex);
             }
         }
         
@@ -1553,50 +1553,30 @@
             }
         }
         
-        // Touch event handlers for dual placeholders
-        function handleDualTouchStart(e, index) {
-            e.preventDefault();
-            e.target.classList.add('highlight');
-        }
         
-        function handleDualTouchMove(e) {
-            e.preventDefault();
-        }
-        
-        function handleDualTouchEnd(e, index) {
-            e.preventDefault();
-            e.target.classList.remove('highlight');
+        function handleDualPlayZoneTouch(cardIndex, placeholderIndex) {
+            const cardObj = gameState.availableNumbers[cardIndex];
             
-            // Check if touching a card from the hand
-            const touch = e.changedTouches[0];
-            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-            
-            if (elementBelow && elementBelow.classList.contains('number-card')) {
-                const cardId = elementBelow.dataset.cardId;
-                const cardIndex = gameState.availableNumbers.findIndex(card => card.id === cardId);
-                const cardObj = gameState.availableNumbers[cardIndex];
-                
-                if (cardObj && cardIndex !== -1) {
-                    // If there's already a card in this slot, return it to the hand first
-                    if (gameState.selectedNumbers[index] !== null && gameState.selectedNumbers[index] !== undefined) {
-                        gameState.availableNumbers.push(gameState.selectedNumbers[index]);
-                    }
-                    
-                    // Remove from hand first
-                    gameState.availableNumbers.splice(cardIndex, 1);
-                    
-                    // Add to dual selection - store the card object
-                    if (gameState.selectedNumbers.length <= index) {
-                        // Fill in missing slots
-                        while (gameState.selectedNumbers.length <= index) {
-                            gameState.selectedNumbers.push(null);
-                        }
-                    }
-                    gameState.selectedNumbers[index] = cardObj;
-                    
-                    updateDisplay();
-                    renderHand();
+            if (cardObj) {
+                // If there's already a card in this slot, return it to the hand first
+                if (gameState.selectedNumbers[placeholderIndex] !== null && gameState.selectedNumbers[placeholderIndex] !== undefined) {
+                    gameState.availableNumbers.push(gameState.selectedNumbers[placeholderIndex]);
                 }
+                
+                // Remove from hand first
+                gameState.availableNumbers.splice(cardIndex, 1);
+                
+                // Add to dual selection - store the card object
+                if (gameState.selectedNumbers.length <= placeholderIndex) {
+                    // Fill in missing slots
+                    while (gameState.selectedNumbers.length <= placeholderIndex) {
+                        gameState.selectedNumbers.push(null);
+                    }
+                }
+                gameState.selectedNumbers[placeholderIndex] = cardObj;
+                
+                updateDisplay();
+                renderHand();
             }
         }
 
