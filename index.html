@@ -722,7 +722,7 @@
     
     <div style="text-align: center; margin-top: 30px; color: #666; font-size: 14px;">
         Created by Alex Lorenzo<br>
-        v0.5
+        v0.6
     </div>
 
     <script>
@@ -1103,39 +1103,34 @@
         function setupDualPlaceholderDrop(placeholderCard, index) {
             placeholderCard.draggable = false;
             
-            // Clear all existing listeners by cloning the element
-            const newPlaceholderCard = placeholderCard.cloneNode(true);
-            placeholderCard.parentNode.replaceChild(newPlaceholderCard, placeholderCard);
+            // Remove existing listeners to avoid duplicates
+            placeholderCard.removeEventListener('dragover', handleDragOver);
+            placeholderCard.removeEventListener('dragleave', handleDragLeave);
+            placeholderCard.removeEventListener('drop', handleDualPlaceholderDrop);
+            placeholderCard.removeEventListener('touchstart', handleDualTouchStart);
+            placeholderCard.removeEventListener('touchmove', handleDualTouchMove);
+            placeholderCard.removeEventListener('touchend', handleDualTouchEnd);
             
-            // Add fresh event listeners to the new element
-            newPlaceholderCard.addEventListener('dragover', handleDragOver);
-            newPlaceholderCard.addEventListener('dragleave', handleDragLeave);
-            newPlaceholderCard.addEventListener('drop', (e) => handleDualPlaceholderDrop(e, index));
+            // Add event listeners directly to the element
+            placeholderCard.addEventListener('dragover', handleDragOver);
+            placeholderCard.addEventListener('dragleave', handleDragLeave);
+            placeholderCard.addEventListener('drop', (e) => handleDualPlaceholderDrop(e, index));
             
             // Add touch support
-            newPlaceholderCard.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                newPlaceholderCard.classList.add('highlight');
-            });
-            
-            newPlaceholderCard.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-            });
-            
-            newPlaceholderCard.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                newPlaceholderCard.classList.remove('highlight');
-            });
+            placeholderCard.addEventListener('touchstart', (e) => handleDualTouchStart(e, index));
+            placeholderCard.addEventListener('touchmove', (e) => handleDualTouchMove(e));
+            placeholderCard.addEventListener('touchend', (e) => handleDualTouchEnd(e, index));
         }
         
         function handleDualPlaceholderDrop(e, index) {
             e.preventDefault();
             e.target.classList.remove('drag-over');
             
-            const cardIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const cardId = e.dataTransfer.getData('card/id');
+            const cardIndex = gameState.availableNumbers.findIndex(card => card.id === cardId);
             const cardObj = gameState.availableNumbers[cardIndex];
             
-            if (!cardObj) return;
+            if (!cardObj || cardIndex === -1) return;
             
             // If there's already a card in this slot, return it to the hand first
             if (gameState.selectedNumbers[index] !== null && gameState.selectedNumbers[index] !== undefined) {
@@ -1503,6 +1498,53 @@
                 
                 updateDisplay();
                 renderHand();
+            }
+        }
+        
+        // Touch event handlers for dual placeholders
+        function handleDualTouchStart(e, index) {
+            e.preventDefault();
+            e.target.classList.add('highlight');
+        }
+        
+        function handleDualTouchMove(e) {
+            e.preventDefault();
+        }
+        
+        function handleDualTouchEnd(e, index) {
+            e.preventDefault();
+            e.target.classList.remove('highlight');
+            
+            // Check if touching a card from the hand
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            if (elementBelow && elementBelow.classList.contains('number-card')) {
+                const cardId = elementBelow.dataset.cardId;
+                const cardIndex = gameState.availableNumbers.findIndex(card => card.id === cardId);
+                const cardObj = gameState.availableNumbers[cardIndex];
+                
+                if (cardObj && cardIndex !== -1) {
+                    // If there's already a card in this slot, return it to the hand first
+                    if (gameState.selectedNumbers[index] !== null && gameState.selectedNumbers[index] !== undefined) {
+                        gameState.availableNumbers.push(gameState.selectedNumbers[index]);
+                    }
+                    
+                    // Remove from hand first
+                    gameState.availableNumbers.splice(cardIndex, 1);
+                    
+                    // Add to dual selection - store the card object
+                    if (gameState.selectedNumbers.length <= index) {
+                        // Fill in missing slots
+                        while (gameState.selectedNumbers.length <= index) {
+                            gameState.selectedNumbers.push(null);
+                        }
+                    }
+                    gameState.selectedNumbers[index] = cardObj;
+                    
+                    updateDisplay();
+                    renderHand();
+                }
             }
         }
 
